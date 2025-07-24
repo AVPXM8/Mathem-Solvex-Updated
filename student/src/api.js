@@ -1,9 +1,6 @@
 
 import axios from 'axios';
 
-// This creates a central instance of axios for your entire app.
-// By setting the baseURL to '/api', all requests will automatically go
-// to the correct domain, whether on localhost or on your live Render site.
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 });
