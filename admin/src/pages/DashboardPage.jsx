@@ -1,4 +1,3 @@
-// src/pages/DashboardPage.jsx - FINAL CORRECTED VERSION
 
 import React, { useState, useEffect } from 'react';
 import api from '../api'; // Use our new central API handler

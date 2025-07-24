@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     // We wrap the login function in useCallback so it doesn't get re-created on every render.
     const login = useCallback(async (username, password, recaptchaToken) => {
         try {
-            const response = await api.post('api/admin/login', { username, password, recaptchaToken });
+            const response = await api.post('/admin/login', { username, password, recaptchaToken });
             if (response.data && response.data.token) {
                 localStorage.setItem('adminToken', response.data.token);
                 setToken(response.data.token);
