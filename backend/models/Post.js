@@ -28,6 +28,10 @@ const postSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+     videoURL: {
+        type: String,
+        default: '',
+    },
     author: {
         type: String, // Storing admin username for simplicity
         required: true,

@@ -28,12 +28,23 @@ const HomePage = () => {
   return (
     <div className={styles.homePage}>
       <Helmet>
-        <title>Maarula Classes: #1 NIMCET Coaching in India</title>
-        <meta name="description" content="Discover why Maarula Classes is ranked as India's #1 NIMCET coaching institute. Access expert-led courses, a comprehensive question bank, and join thousands of successful students from across the country." />
-        <meta name="keywords" content="NIMCET coaching, #1 NIMCET coaching, NIMCET coaching in India, CUET PG question bank, MCA entrance exam, Maarula Classes" />
-        <link rel="canonical" href="https://questions.maarula.in/" />
-        <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
-      </Helmet>
+  <title>Maarula MCA PYQ Hub | Previous Year Papers, Syllabus & Notifications for NIMCET, CUET PG, Jamia & More</title>
+
+  <meta 
+    name="description" 
+    content="Prepare smarter for MCA entrance exams with Maarula's PYQ Hub. Get free access to solved previous year question papers (PYQs) of NIMCET, CUET PG, Jamia Millia Islamia, IGDTUW, VITMEE, and more. Stay ahead with real-time exam alerts, detailed syllabus breakdowns, expert preparation strategies, and all essential updates – all in one platform." 
+  />
+
+  <meta 
+    name="keywords" 
+    content="MCA entrance exams, MCA previous year question papers, NIMCET PYQs, CUET PG MCA papers, Jamia MCA entrance, IGDTUW MCA exam, VITMEE questions, MCA exam syllabus, MCA entrance preparation, Maarula Classes PYQ hub,NIMCET exam date, what is NIMCET" 
+  />
+
+  <link rel="canonical" href="https://question.maarula.in/" />
+
+  <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
+</Helmet>
+
 
       {/* Section 1: Top Carousel */}
       <SuccessCarousel />

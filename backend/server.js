@@ -31,7 +31,7 @@ app.set('trust proxy', 1);
 // but blocks all other unknown origins in a production environment.
 const allowedOrigins = process.env.NODE_ENV === 'production'
     ? [process.env.STUDENT_URL, process.env.ADMIN_URL] 
-    : ['http://localhost:5173'];
+    : ['http://localhost:5173','http://localhost:5174'];
 
 const corsOptions = {
     origin: (origin, callback) => {

@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const cloudinary = require('../config/cloudinary');
 
 // This is a helper function to create a URL-friendly slug.
 // By placing it here, it's available to all functions in this file.
@@ -38,31 +39,41 @@ exports.getPostBySlug = async (req, res) => {
 
 // @desc    Create a new post
 exports.createPost = async (req, res) => {
-    const { title, content, category, metaDescription, keywords } = req.body;
+    const { title, content, category, metaDescription, keywords,videoURL } = req.body;
     
     if (!title || !content || !category) {
         return res.status(400).json({ message: 'Title, content, and category are required.' });
     }
 
+    // 1. Generate the slug from the title
     const slug = generateSlug(title);
 
+    // 2. Check if a post with this slug already exists
     const slugExists = await Post.findOne({ slug });
     if (slugExists) {
         return res.status(400).json({ message: 'A post with this title already exists. Please choose a unique title.' });
     }
 
-    const newPost = new Post({
+    const postData = {
         title,
         content,
-        slug,
+        slug, // Add the generated slug
         category,
         metaDescription,
-        keywords,
+        keywords: keywords ? keywords.split(',').map(k => k.trim()) : [],
         author: req.user.username,
-    });
-    
-    const savedPost = await newPost.save();
-    res.status(201).json(savedPost);
+        videoURL,
+    };
+
+    // 3. Handle the featured image upload, if it exists
+    if (req.file) {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        postData.featuredImage = result.secure_url;
+    }
+
+    const newPost = new Post(postData);
+    await newPost.save();
+    res.status(201).json(newPost);
 };
 
 // @desc    Update a post
@@ -73,6 +84,17 @@ exports.updatePost = async (req, res) => {
     if (updateData.title) {
         updateData.slug = generateSlug(updateData.title);
     }
+    
+    // If keywords are provided, convert them into an array
+   if (updateData.keywords && typeof updateData.keywords === 'string') {
+        updateData.keywords = updateData.keywords.split(',').map(k => k.trim());
+    }
+
+    // Handle a new featured image upload during an update
+    if (req.file) {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        updateData.featuredImage = result.secure_url;
+    }
 
     const updatedPost = await Post.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!updatedPost) {
@@ -80,7 +102,6 @@ exports.updatePost = async (req, res) => {
     }
     res.status(200).json(updatedPost);
 };
-
 // @desc    Delete a post
 exports.deletePost = async (req, res) => {
     const post = await Post.findById(req.params.id);
@@ -89,4 +110,20 @@ exports.deletePost = async (req, res) => {
     }
     await post.deleteOne();
     res.status(200).json({ message: 'Post deleted successfully' });
+};
+exports.uploadEditorImage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No image file provided.' });
+        }
+        // Upload the image to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path);
+
+        // The editor expects a specific JSON format back with the URL
+        res.status(200).json({ location: result.secure_url });
+
+    } catch (error) {
+        console.error('Editor image upload error:', error);
+        res.status(500).json({ message: 'Server error during image upload.' });
+    }
 };

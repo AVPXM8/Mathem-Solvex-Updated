@@ -1,5 +1,3 @@
-// This is the final, correct code for routes/questionRoutes.js with the proper route order.
-
 const express = require('express');
 const router = express.Router();
 

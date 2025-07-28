@@ -1,10 +1,10 @@
 const multer = require('multer');
 const path = require('path');
 
-// Set up storage engine for multer
+// Set up storage engine for multer (this part is correct)
 const storage = multer.diskStorage({});
 
-// Check file type
+
 function checkFileType(file, cb) {
     const filetypes = /jpeg|jpg|png|gif/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -17,11 +17,11 @@ function checkFileType(file, cb) {
     }
 }
 
+
 const upload = multer({
     storage: storage,
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }
 });
-
 module.exports = upload;
