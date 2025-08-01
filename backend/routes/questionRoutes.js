@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-
 const { 
     getQuestions, 
     getQuestionById, 
@@ -9,6 +8,7 @@ const {
     deleteQuestion, 
     getQuestionStats,
     getFilterOptions,
+    getPublicQuestions, 
     getRelatedQuestions
 } = require('../controllers/questionController');
 
@@ -31,9 +31,10 @@ router.get('/filters', getFilterOptions);
 // GET /api/questions/stats - Gets dashboard stats (Protected)
 router.get('/stats', protect, getQuestionStats);
 router.get('/:id/related', getRelatedQuestions);
+router.get('/public', getPublicQuestions);
 
 router.route('/')
-    .get(getQuestions)
+    .get(protect,getQuestions)
     .post(protect, imageUploadFields, createQuestion);
 
  

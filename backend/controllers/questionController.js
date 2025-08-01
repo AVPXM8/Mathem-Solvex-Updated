@@ -1,27 +1,67 @@
- // controllers/questionController.js - FINAL VERIFIED VERSION
-const Question = require('../models/Question');
-const cloudinary = require('../config/cloudinary');
+import Question from '../models/Question.js';
+import cloudinary from '../config/cloudinary.js';
 
 // GET ALL QUESTIONS (with filters)
-exports.getQuestions = async (req, res) => {
+export const getQuestions = async (req, res) => {
     try {
-        const { exam, subject, year, search } = req.query;
-        let query = {};
-        if (exam) query.exam = exam;
-        if (subject) query.subject = subject;
-        if (year) query.year = year;
-        if (search) query.questionText = { $regex: search, $options: 'i' };
+        // 1. Get query parameters with default values for pagination and sorting
+        const { 
+            page = 1, 
+            limit = 15, 
+            search = '', 
+            sortBy = 'createdAt', 
+            order = 'desc', 
+            exam, 
+            subject, 
+            year 
+        } = req.query;
+
+        // 2. Build the filter object for the database query
+        const filter = {};
+        if (search) {
+            filter.questionText = { $regex: search, $options: 'i' };
+        }
+        if (exam) filter.exam = exam;
+        if (subject) filter.subject = subject;
+        if (year) filter.year = year;
+
+        // 3. Build the sort object
+        const sort = {};
+        if (sortBy) {
+            sort[sortBy] = order === 'desc' ? -1 : 1;
+        }
+
+        // 4. Calculate the number of documents to skip
+        const skip = (page - 1) * parseInt(limit);
+
+        // 5. Execute queries to get the current page's data and the total count
+        const [questions, totalCount] = await Promise.all([
+            Question.find(filter)
+                .sort(sort)
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Question.countDocuments(filter)
+        ]);
         
-        // const questions = await Question.find(query).sort({ createdAt: -1 });
-        const questions = await Question.find(query).sort({ subject: 1, topic: 1 });
-        res.status(200).json(questions);
+        // 6. Calculate total pages
+        const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+        // 7. Send the final, structured response back to the frontend
+        res.status(200).json({
+            questions,
+            totalPages,
+            totalCount,
+            currentPage: parseInt(page)
+        });
+
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Error fetching questions:', error);
+        res.status(500).json({ message: 'Server error while fetching questions.' });
     }
 };
 
 // GET A SINGLE QUESTION
-exports.getQuestionById = async (req, res) => {
+export const getQuestionById = async (req, res) => {
     try {
         const question = await Question.findById(req.params.id);
         if (!question) return res.status(404).json({ message: 'Question not found' });
@@ -32,7 +72,7 @@ exports.getQuestionById = async (req, res) => {
 };
 
 // CREATE A QUESTION
-exports.createQuestion = async (req, res) => {
+export const createQuestion = async (req, res) => {
     try {
         const questionData = { ...req.body };
         const parsedOptions = JSON.parse(req.body.options);
@@ -59,7 +99,7 @@ exports.createQuestion = async (req, res) => {
 };
 
 // UPDATE A QUESTION
-exports.updateQuestion = async (req, res) => {
+export const updateQuestion = async (req, res) => {
     try {
         const updateData = { ...req.body };
         if (updateData.options) {
@@ -87,7 +127,7 @@ exports.updateQuestion = async (req, res) => {
 };
 
 // DELETE A QUESTION
-exports.deleteQuestion = async (req, res) => {
+export const deleteQuestion = async (req, res) => {
     try {
         const deletedQuestion = await Question.findByIdAndDelete(req.params.id);
         if (!deletedQuestion) return res.status(404).json({ message: 'Question not found' });
@@ -98,7 +138,7 @@ exports.deleteQuestion = async (req, res) => {
 };
 
 //GET DASHBOARD STATS
-exports.getQuestionStats = async (req, res) => {
+export const getQuestionStats = async (req, res) => {
     try {
         const totalQuestions = await Question.countDocuments();
         const subjects = await Question.distinct('subject', { subject: { $ne: null, $ne: "" } });
@@ -129,7 +169,7 @@ exports.getQuestionStats = async (req, res) => {
 // };
 // @desc    Get all unique filter options for the frontend
 // @route   GET /api/questions/filters
-exports.getFilterOptions = async (req, res) => {
+export const getFilterOptions = async (req, res) => {
     try {
         // This finds all unique values for the 'subject' field, ignoring any empty ones
         const subjects = await Question.distinct('subject', { subject: { $ne: null, $ne: "" } });
@@ -152,7 +192,7 @@ exports.getFilterOptions = async (req, res) => {
     }
 };
 
-exports.getRelatedQuestions = async (req, res) => {
+export const getRelatedQuestions = async (req, res) => {
     try {
         const originalQuestion = await Question.findById(req.params.id);
         if (!originalQuestion) {
@@ -172,6 +212,16 @@ exports.getRelatedQuestions = async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching related questions:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+export const getPublicQuestions = async (req, res) => {
+    try {
+        // Find all questions and sort them, newest year first
+        const questions = await Question.find({}).sort({ year: -1 });
+        res.status(200).json(questions);
+    } catch (error) {
+        console.error('Error fetching public questions:', error);
         res.status(500).json({ message: 'Server Error' });
     }
 };

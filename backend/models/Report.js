@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const reportSchema = new mongoose.Schema({
     questionId: {
@@ -8,7 +8,8 @@ const reportSchema = new mongoose.Schema({
     },
     issueDescription: {
         type: String,
-        required: true
+        required: true,
+        trim: true 
     },
     status: {
         type: String,
@@ -17,4 +18,4 @@ const reportSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Report', reportSchema);
+export default mongoose.model('Report', reportSchema);

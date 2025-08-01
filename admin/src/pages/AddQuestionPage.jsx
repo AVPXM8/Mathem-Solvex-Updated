@@ -197,7 +197,7 @@ const AddQuestionPage = () => {
                 </div>
 
                 <button type="submit" className={styles.submitBtn} disabled={loading}>
-                    {loading ? 'Saving...' : (isEditMode ? 'Update Question' : 'Save Question')}
+                    {loading ? 'Saving...' : (isEditMode ? 'Update Question' : 'Save Question and go to next')}
                 </button>
             </form>
         </div>

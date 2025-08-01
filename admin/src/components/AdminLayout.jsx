@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LayoutDashboard, HelpCircle, FileText, Newspaper, LogOut, Menu, X } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 
 const AdminLayout = () => {
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
     const auth = useAuth();
     const navigate = useNavigate();
 
@@ -12,20 +14,51 @@ const AdminLayout = () => {
         navigate('/login');
     };
 
+    const navLinks = [
+        { to: "/admin/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
+        { to: "/admin/questions", icon: <HelpCircle size={20} />, label: "Questions" },
+        { to: "/admin/posts", icon: <Newspaper size={20} />, label: "Posts" },
+        { to: "/admin/reports", icon: <FileText size={20} />, label: "Reports" }
+    ];
+
     return (
         <div className={styles.layout}>
-            <aside className={styles.sidebar}>
-                <h2 className={styles.sidebarHeader}>Maarula Admin</h2>
-                <nav className={styles.sidebarNav}>
-                    <NavLink to="/admin/dashboard" className={({ isActive }) => isActive ? styles.active : ''}>Dashboard</NavLink>
-                    <NavLink to="/admin/questions" className={({ isActive }) => isActive ? styles.active : ''}>Questions</NavLink>
-                    <NavLink to="/admin/reports" className={({ isActive }) => isActive ? styles.active : ''}>Reports</NavLink>
-                    <NavLink to="/admin/posts" className={({ isActive }) => isActive ? styles.active : ''}>Posts</NavLink>
-                </nav>
-                <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
+            <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
+                <div className={styles.sidebarTop}>
+                    <h2 className={styles.sidebarHeader}>Maarula Admin</h2>
+                    <nav className={styles.sidebarNav}>
+                        {navLinks.map(link => (
+                            <NavLink 
+                                to={link.to} 
+                                key={link.to}
+                                className={({ isActive }) => isActive ? styles.active : ''}
+                                onClick={() => setSidebarOpen(false)}
+                            >
+                                {link.icon}
+                                <span>{link.label}</span>
+                            </NavLink>
+                        ))}
+                    </nav>
+                </div>
+                <div className={styles.userProfile}>
+                    <span className={styles.userEmail}>{auth.user?.email}</span>
+                    <button onClick={handleLogout} className={styles.logoutButton}>
+                        <LogOut size={20} />
+                        <span>Logout</span>
+                    </button>
+                </div>
             </aside>
+
             <main className={styles.mainContent}>
-                <Outlet />
+                <header className={styles.mobileHeader}>
+                    <button onClick={() => setSidebarOpen(!isSidebarOpen)} className={styles.menuToggle}>
+                        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                    <h2 className={styles.mobileHeaderTitle}>Maarula Admin</h2>
+                </header>
+                <div className={styles.contentWrapper}>
+                    <Outlet />
+                </div>
             </main>
         </div>
     );

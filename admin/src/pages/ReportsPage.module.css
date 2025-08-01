@@ -1,0 +1,89 @@
+.container { padding: 25px; }
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 25px;
+}
+.header h1 { font-size: 1.8rem; font-weight: 700; color: #1e293b; }
+
+.card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+}
+
+.tabsContainer {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+}
+.tabButton {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background-color: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tabButton:hover {
+  color: #1e293b;
+}
+.tabButton.activeTab {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+}
+
+.countInfo { color: #64748b; margin-bottom: 20px; font-size: 0.9rem; }
+.loader, .noResults { text-align: center; padding: 40px; color: #64748b; }
+
+.tableWrapper { overflow-x: auto; }
+.dataTable { width: 100%; border-collapse: collapse; }
+.dataTable th, .dataTable td { padding: 15px; text-align: left; }
+.dataTable thead { border-bottom: 1px solid #e2e8f0; }
+.dataTable th {
+  font-size: 0.8rem; font-weight: 600;
+  color: #475569; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.dataTable tbody tr { border-bottom: 1px solid #f1f5f9; }
+.dataTable tbody tr:last-child { border-bottom: none; }
+
+.questionInfo strong {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.actionsCell { width: 400px; text-align: right; }
+.actionsHeader { text-align: right!important; }
+.actionsCell {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+}
+.actionBtn {
+  border: none; cursor: pointer;
+  padding: 8px 15px; border-radius: 6px;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-weight: 600; text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.editBtn {
+  background-color: #eef2ff;
+  color: #4f46e5;
+}
+.editBtn:hover {
+  background-color: #4f46e5;
+  color: white;
+}
+.resolveBtn {
+  background-color: #dcfce7;
+  color: #166534;
+}
+.resolveBtn:hover {
+  background-color: #22c55e;
+  color: white;
+}

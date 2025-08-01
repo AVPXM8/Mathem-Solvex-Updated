@@ -1,103 +1,170 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef,useCallback,useMemo  } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api';
-import useMathJax from '../hooks/useMathJax';
-import { QuestionListSkeleton } from '../components/SkeletonLoader';  
+import { Helmet } from 'react-helmet-async';
+import MathPreview from '../components/MathPreview';
+import { Filter, Search, X } from 'lucide-react';
 import styles from './QuestionLibraryPage.module.css';
 
+
 const QuestionLibraryPage = () => {
-    const [questions, setQuestions] = useState([]);
+    const [allQuestions, setAllQuestions] =useState([]);
     const [loading, setLoading] = useState(true);
     const [filterOptions, setFilterOptions] = useState({ exams: [], subjects: [], years: [] });
-    const [searchTerm, setSearchTerm] = useState('');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Fetch filter options (subjects, exams, years) once when the component loads
-     useMathJax([questions]);
-    useEffect(() => {
-        api.get('/questions/filters')
-            .then(res => setFilterOptions(res.data))
-            .catch(err => console.error("Failed to fetch filter options", err));
-    }, []);
+    // Get current filter values from URL search params
+    const currentFilters = {
+        search: searchParams.get('search') || '',
+        exam: searchParams.get('exam') || '',
+        subject: searchParams.get('subject') || '',
+    };
+    const [searchTerm, setSearchTerm] = useState(currentFilters.search);
 
-    // Fetch the list of questions whenever the URL filters or search term change
+    // Fetch filter options and all public questions once
     useEffect(() => {
-        setLoading(true);
-        const currentParams = Object.fromEntries([...searchParams]);
-        api.get('/questions', { params: currentParams })
-            .then(res => setQuestions(res.data))
-            .catch(err => console.error("Failed to fetch questions", err))
-            .finally(() => setLoading(false));
-    }, [searchParams]);
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [questionsRes, filtersRes] = await Promise.all([
+                    api.get('/questions/public'), // Use the simple public endpoint
+                    api.get('/questions/filters')
+                ]);
+                setAllQuestions(questionsRes.data || []);
+                setFilterOptions(filtersRes.data || { exams: [], subjects: [] });
+            } catch (err) {
+                console.error("Failed to fetch data", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
     
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        const newParams = Object.fromEntries([...searchParams]);
-        if (value) { newParams[name] = value; } 
-        else { delete newParams[name]; }
+    // Filter questions on the client-side
+    const filteredQuestions = useMemo(() => {
+        return allQuestions.filter(q => {
+            const searchMatch = currentFilters.search ? q.questionText.toLowerCase().includes(currentFilters.search.toLowerCase()) : true;
+            const examMatch = currentFilters.exam ? q.exam === currentFilters.exam : true;
+            const subjectMatch = currentFilters.subject ? q.subject === currentFilters.subject : true;
+            return searchMatch && examMatch && subjectMatch;
+        });
+    }, [allQuestions, searchParams]);
+
+    const handleFilterChange = (name, value) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (value) { newParams.set(name, value); } 
+        else { newParams.delete(name); }
         setSearchParams(newParams);
+        setIsFilterOpen(false);
     };
 
     const handleSearch = (e) => {
         e.preventDefault();
-        const newParams = Object.fromEntries([...searchParams]);
-        if (searchTerm) { newParams.search = searchTerm; } 
-        else { delete newParams.search; }
-        setSearchParams(newParams);
+        handleFilterChange('search', searchTerm);
+    };
+    
+    const clearFilters = () => {
+        setSearchTerm('');
+        setSearchParams({});
+        setIsFilterOpen(false);
     };
 
-    return (
-        <div>
-            <h1>Question Library</h1>
-            <p>Browse, search, and filter from our collection of questions.</p>
+    const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem",
+    "position": 1,
+    "name": "Home",
+    "item": "https://question.maarula.in/"  
+  }, {
+    "@type": "ListItem",
+    "position": 2,
+    "name": "Question Bank",
+    "item": "https://question.maarula.in/questions"  
+  }]
+};
+
+return (
+    <>
+        <Helmet>
+            <title>NIMCET & CUET-PG Previous Year Question Bank | Maarula Classes</title>
+            <meta name="description" content="Access and solve thousands of Previous Year Questions (PYQs) for NIMCET, CUET-PG, and other top MCA entrance exams. Filter by subject and year to boost your preparation." />
+            <link rel="canonical" href="https://questions.maarula.in/questions" />
+            <script type="application/ld+json">
+                {JSON.stringify(breadcrumbSchema)}
+            </script>
+        </Helmet>
+
+            <div className={styles.pageHeader}>
+                <h1>The Ultimate Question Bank</h1>
+                <p>Here you can get all the PYQs for NIMCET, CUET-PG, and more. Sharpen your skills with the most comprehensive collection of solved papers.</p>
+            </div>
             
-            <div className={styles.filterBar}>
-                <form onSubmit={handleSearch} className={styles.searchForm}>
-                    <input 
-                        type="text" 
-                        placeholder="Search question text..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={styles.searchInput}
-                    />
-                    <button type="submit" className={styles.searchButton}>Search</button>
-                </form>
+            {isFilterOpen && <div className={styles.overlay} onClick={() => setIsFilterOpen(false)}></div>}
+            
+            <div className={styles.container}>
+                <aside className={`${styles.filterSidebar} ${isFilterOpen ? styles.open : ''}`}>
+                    <button className={styles.closeFilterButton} onClick={() => setIsFilterOpen(false)}><X size={24} /> Close</button>
+                    <form onSubmit={handleSearch} className={styles.searchForm}>
+                        <Search size={20} className={styles.searchIcon}/>
+                        <input 
+                            type="text" 
+                            placeholder="Search questions..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={styles.searchInput}
+                        />
+                    </form>
+                    
+                    <div className={styles.filterGroup}>
+    <h4>Exam</h4>
+    <div className={styles.filterOptionsContainer}>
+        {filterOptions.exams.map(exam => <button key={exam} onClick={() => handleFilterChange('exam', exam)} className={searchParams.get('exam') === exam ? styles.activeFilter : ''}>{exam}</button>)}
+    </div>
+</div>
+                    <div className={styles.filterGroup}>
+    <h4>Subject</h4>
+    <div className={styles.filterOptionsContainer}>
+        {filterOptions.subjects.map(subject => <button key={subject} onClick={() => handleFilterChange('subject', subject)} className={searchParams.get('subject') === subject ? styles.activeFilter : ''}>{subject}</button>)}
+    </div>
+</div>
+                    <button onClick={clearFilters} className={styles.clearButton}>Clear All Filters</button>
+                </aside>
 
-                <select name="exam" onChange={handleFilterChange} value={searchParams.get('exam') || ''}>
-                    <option value="">All Exams</option>
-                    {filterOptions.exams.map(exam => <option key={exam} value={exam}>{exam}</option>)}
-                </select>
-                <select name="subject" onChange={handleFilterChange} value={searchParams.get('subject') || ''}>
-                    <option value="">All Subjects</option>
-                    {filterOptions.subjects.map(subject => <option key={subject} value={subject}>{subject}</option>)}
-                </select>
+                <main className={styles.questionList}>
+                    <div className={styles.listHeader}>
+                        <span>Showing {filteredQuestions.length} questions</span>
+                        <button className={styles.mobileFilterToggle} onClick={() => setIsFilterOpen(!isFilterOpen)}>
+                            <Filter size={18}/> Filters
+                        </button>
+                    </div>
+                    {loading ? <p>Loading questions...</p> : filteredQuestions.length > 0 ? (
+                        filteredQuestions.map(q => (
+                            <Link to={`/question/${q._id}`} key={q._id} className={styles.questionCard}>
+                                <div className={styles.tags}>
+                                    <span className={styles.tag}>{q.exam}</span>
+                                    <span className={styles.tag}>{q.subject}</span>
+                                    {q.year && <span className={styles.tag}>{q.year}</span>}
+                                </div>
+                                <div className={styles.questionText}>
+                                    <MathPreview latexString={q.questionText} />
+                                </div>
+                                <div className={styles.options}>
+                                    {q.options.map((opt, i) => <div key={i} className={styles.option}>{String.fromCharCode(65 + i)}) <MathPreview latexString={opt.text} /></div>)}
+                                </div>
+                                <div className={styles.viewLink}>
+                                    Attempt & View Solution &rarr;
+                                </div>
+                            </Link>
+                        ))
+                    ) : <div className={styles.noResults}>No questions found for the selected filters.</div>}
+                </main>
             </div>
-
-            <div className={styles.questionList}>
-                    {loading ? (
-                    <QuestionListSkeleton />) : 
-                 questions.length > 0 ? (
-                    questions.map(q => (
-                        <Link to={`/question/${q._id}`} key={q._id} className={styles.questionCard}>
-                            <div className={styles.tags}>
-                                <span className={styles.tag}>{q.exam}</span>
-                                <span className={styles.tag}>{q.subject}</span>
-                                {q.year && <span className={styles.tag}>{q.year}</span>}
-                            </div>
-                            <div className={styles.questionText} dangerouslySetInnerHTML={{ __html: q.questionText }}></div>
-                            <div className={styles.viewLink}>
-                                <span>Attempt Question & See Solution</span>
-                            </div>
-                        </Link>
-                    ))
-                ) : <div className={styles.noResults}>No questions found for the selected filters.</div>}
-            </div>
-        </div>
+        </>
     );
 };
 
 export default QuestionLibraryPage;
-
-
-

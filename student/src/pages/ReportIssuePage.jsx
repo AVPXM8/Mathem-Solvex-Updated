@@ -1,14 +1,23 @@
-// src/pages/ReportIssuePage.jsx - FINAL ENHANCED UI VERSION
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
-import styles from './AddQuestionPage.module.css'; 
+import toast from 'react-hot-toast';
+import { Helmet } from 'react-helmet-async';
+import styles from './ReportIssuePage.module.css'; 
 
+const PREDEFINED_ISSUES = [
+    "The correct answer is marked incorrectly.",
+    "There is a typo in the question.",
+    "There is a typo in the solution/explanation.",
+    "The question image is unclear or wrong.",
+    "I have issue with video solution",
+    "Other issue (please describe below)."
+];
 
 const ReportIssuePage = () => {
     const { id: questionId } = useParams();
-    const [issueDescription, setIssueDescription] = useState('');
+    const [selectedIssue, setSelectedIssue] = useState('');
+    const [clarification, setClarification] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -16,8 +25,8 @@ const ReportIssuePage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (issueDescription.trim().length < 10) {
-            setError('Please provide a detailed description of the issue (at least 10 characters).');
+        if (!selectedIssue) {
+            setError('Please select an issue type.');
             return;
         }
 
@@ -25,30 +34,37 @@ const ReportIssuePage = () => {
         setError('');
         setSuccess('');
 
+        // Combine the predefined issue with the user's clarification
+        const finalIssueDescription = `${selectedIssue}\n\nAdditional Clarification:\n${clarification || 'None provided.'}`;
+
         try {
             await api.post('/reports', {
                 questionId,
-                issueDescription,
+                issueDescription: finalIssueDescription,
             });
-            setSuccess('Thank you! Your report has been submitted successfully. You will be redirected shortly.');
+            setSuccess('Thank you! Your report has been submitted. We will review it shortly.');
+            toast.success('Report submitted successfully!');
             setTimeout(() => {
-                navigate(`/question/${questionId}`);
+                navigate(-1); // Go back to the previous page
             }, 3000);
         } catch (err) {
             setError('Failed to submit report. Please try again later.');
-            console.error(err);
+            toast.error('Submission failed.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        // 👇 The form is now wrapped in a card for a professional look 👇
-        <div className={styles.container}>
+        <div className={styles.pageContainer}>
+             <Helmet>
+                <title>Report an Issue | Maarula Classes</title>
+                <meta name="description" content="Report an issue with a question in the Maarula Classes question bank. Help us improve our content." />
+            </Helmet>
             <div className={styles.card}>
                 <div className={styles.cardHeader}>
                     <h1>Report an Issue</h1>
-                    <p>Help us improve by providing a detailed description of the problem you found.</p>
+                    <p>Help us improve by selecting the type of problem you found.</p>
                 </div>
                 <div className={styles.cardBody}>
                     {success ? (
@@ -58,19 +74,36 @@ const ReportIssuePage = () => {
                             {error && <p className={styles.error}>{error}</p>}
                             
                             <div className={styles.inputGroup}>
-                                <label htmlFor="issueDescription">Issue Description</label>
-                                <textarea
-                                    id="issueDescription"
-                                    value={issueDescription}
-                                    onChange={(e) => setIssueDescription(e.target.value)}
-                                    rows="8" // This gives the text area a much better default height
-                                    placeholder="e.g., 'The correct answer is marked incorrectly', 'There is a typo in the explanation', etc."
-                                    required
-                                    className={styles.textarea}
-                                />
+                                <label>1. Select the issue type</label>
+                                <div className={styles.issueOptions}>
+                                    {PREDEFINED_ISSUES.map(issue => (
+                                        <button
+                                            type="button"
+                                            key={issue}
+                                            onClick={() => setSelectedIssue(issue)}
+                                            className={`${styles.issueButton} ${selectedIssue === issue ? styles.selected : ''}`}
+                                        >
+                                            {issue}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
+                            
+                            {selectedIssue && (
+                                <div className={styles.inputGroup}>
+                                    <label htmlFor="clarification">2. Provide more details (optional)</label>
+                                    <textarea
+                                        id="clarification"
+                                        value={clarification}
+                                        onChange={(e) => setClarification(e.target.value)}
+                                        rows="5"
+                                        placeholder="e.g., 'Option B seems to be the correct answer because...'"
+                                        className={styles.textarea}
+                                    />
+                                </div>
+                            )}
 
-                            <button type="submit" className={styles.submitBtn} disabled={loading}>
+                            <button type="submit" className={styles.submitBtn} disabled={loading || !selectedIssue}>
                                 {loading ? 'Submitting...' : 'Submit Report'}
                             </button>
                         </form>
