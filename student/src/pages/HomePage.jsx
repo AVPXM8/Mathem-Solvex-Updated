@@ -40,7 +40,7 @@ const HomePage = () => {
         <meta property="og:description" content="Access NIMCET & CUET PG previous year question papers, MCA entrance solved papers, and expert mock tests. Powered by Maarula Classes." />
         <meta property="og:url" content="https://question.maarula.in/" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://question.maarula.in/og-cover.jpg" />
+        <meta property="og:image" content="https://res.cloudinary.com/dwmj6up6j/image/upload/v1752683439/maarulalogo_lywhdo.png" />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
