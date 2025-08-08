@@ -32,8 +32,10 @@ async function createServer() {
         helmet.script.toString(),
       ].join('');
 
-      template = template.replace(``, headHtml);
-      template = template.replace(``, appHtml);
+    
+      template = template.replace(`<!--helmet-outlet-->`, headHtml);
+      template = template.replace(`<!--ssr-outlet-->`, appHtml);
+      
       
       res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
     } catch (e) {
