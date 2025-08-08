@@ -56,6 +56,9 @@ app.use('/api/questions', require('./routes/questionRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/posts', require('./routes/postRoutes'));
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Server is healthy' });
+});
 
 app.get('/sitemap.xml', async (req, res) => {
     try {

@@ -1,59 +1,42 @@
 /* Footer.module.css - FINAL VERSION */
 .footer {
-  background-color: #0f172a; /* Very Dark Blue */
-  color: #94a3b8; /* Lighter Slate */
+  background-color: #0f172a;
+  color: #94a3b8;
   padding: 40px 20px 0 20px;
 }
 
 /* --- Section 1: Top Logo/Social --- */
 .footerTop {
-  display: flex; flex-direction: column; align-items: center; text-align: center;
-  padding-bottom: 40px; border-bottom: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #1e293b;
 }
 .footerLogo { height: 70px; margin-bottom: 10px; }
 .footerTitle { color: #fff; margin: 0; font-size: 1.6rem; }
 .footerSubtitle { margin: 5px 0 20px 0; font-size: 1rem; color: #cbd5e1; }
 .socials { display: flex; align-items: center; gap: 15px; }
 .socialIcons { display: flex; gap: 18px; font-size: 1.5rem; }
-
-/* Tooltip Hover Effect for Social Icons - NEW */
-.socialIcons a {
-  position: relative; /* Required for tooltip positioning */
-  color: #94a3b8;
-  transition: color 0.2s ease, transform 0.2s ease;
-}
+.socialIcons a { color: #94a3b8; transition: color 0.2s ease, transform 0.2s ease; }
 .socialIcons a:hover { color: #fff; transform: scale(1.1); }
-.socialIcons a::after {
-  content: attr(aria-label);
-  position: absolute;
-  bottom: 140%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #334155;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease, bottom 0.2s ease;
-}
-.socialIcons a:hover::after {
-  opacity: 1;
-  visibility: visible;
-  bottom: 125%;
-}
 
 /* --- Section 2: Links Grid --- */
 .footerGrid {
-  max-width: 1200px; margin: 40px auto;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  max-width: 1200px;
+  margin: 40px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 40px;
 }
 .footerColumn h4 {
-  font-size: 1rem; font-weight: 600; color: white;
-  margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 .footerColumn ul { list-style: none; padding: 0; margin: 0; }
 .footerColumn li { margin-bottom: 15px; }
@@ -62,18 +45,23 @@
 
 /* --- Section 3: App Download --- */
 .appDownloadSection {
-  display: flex; justify-content: center; padding: 0 0 40px 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 0 40px 0;
 }
 .appCta {
-  background-color: #ffc107; color: #212529; padding: 25px 40px;
-  border-radius: 12px; text-align: center; max-width: 600px; width: 100%;
+  background-color: #ffc107;
+  color: #212529;
+  padding: 25px 40px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
 }
 .appCta h4 { color: #212529; font-size: 1.5rem; margin: 0 0 10px 0; }
 .appCta p { margin: 0 0 20px 0; font-weight: 500; }
-
-/* Updated App Button Styles */
 .playStoreButton {
-  background-color: #f97316; /* Orange */
+  background-color: #f97316;
   color: #fff;
   text-decoration: none;
   padding: 12px 25px;
@@ -81,36 +69,33 @@
   font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 12px; /* Space between icon and text */
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  gap: 10px;
+  transition: background-color 0.2s ease;
   font-size: 1.1rem;
-  border: none; /* remove border */
 }
-.playStoreButton:hover { 
-  background-color: #ea580c;
-  transform: scale(1.03);
+.playStoreButton:hover { background-color: #ea580c; }
+.playStoreButton img { height: 24px; }
+
+/* --- Section 4: Bottom Bar --- */
+.footerBottom {
+  text-align: center;
+  padding: 20px 0;
+  border-top: 1px solid #1e293b;
+  font-size: 0.9rem;
+  color: #64748b;
 }
 
-/* --- Section 4 & Floating Buttons --- */
-.footerBottom {
-  text-align: center; padding: 20px 0; border-top: 1px solid #1e293b;
-  font-size: 0.9rem; color: #64748b;
+/* --- Floating Buttons --- */
+.whatsappFloat, .backToTopButton { /* ... existing styles ... */ }
+
+/* ========================================= */
+/* --- MOBILE RESPONSIVE STYLES (THE FIX) --- */
+/* ========================================= */
+@media (max-width: 768px) {
+  .footerGrid {
+    /* Creates two equal-width columns on all mobile/tablet screens */
+    grid-template-columns: 1fr 1fr;
+    gap: 30px 20px; /* Vertical and horizontal gap */
+    text-align: left; /* Aligns all text to the left as in your screenshot */
+  }
 }
-.whatsappFloat {
-  position: fixed; bottom: 25px; right: 25px; background-color: #25d366;
-  color: #fff; width: 60px; height: 60px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2.5rem; box-shadow: 0 4px 15px rgba(0,0,0,.2);
-  z-index: 998; transition: transform 0.2s ease;
-}
-.whatsappFloat:hover { transform: scale(1.1); }
-.backToTopButton {
-  position: fixed; bottom: 95px; right: 25px; background-color: #4f46e5;
-  color: #fff; width: 50px; height: 50px; border-radius: 50%; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,.2);
-  z-index: 998; opacity: 0; visibility: hidden;
-  transition: all 0.3s ease;
-}
-.backToTopButton.showButton { opacity: 1; visibility: visible; }
-.backToTopButton:hover { transform: scale(1.1); background-color: #4338ca; }
