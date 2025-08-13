@@ -3,9 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
-// Get the root directory of the project, which is /var/task on Vercel
-const root = process.cwd(); 
+// The root is now determined relative to this file's location
+const root = path.resolve(__dirname, '..');
 
 async function createServer() {
   const app = express();
@@ -16,18 +17,17 @@ async function createServer() {
     vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'custom',
-      root, // Tell Vite where the project root is
+      root,
     });
     app.use(vite.middlewares);
   } else {
-    // In production, serve static assets from the included 'dist/client' folder
+    // In production, serve static assets from 'dist/client'
     app.use(express.static(path.resolve(root, 'dist/client'), { index: false }));
   }
 
   app.use('*', async (req, res, next) => {
     const url = req.originalUrl;
     try {
-      // Correctly locate the index.html template in both dev and prod
       const templatePath = isProduction 
         ? path.resolve(root, 'dist/client/index.html')
         : path.resolve(root, 'index.html');
@@ -36,7 +36,6 @@ async function createServer() {
 
       let render;
       if (isProduction) {
-        // Correctly import the pre-built server entry file
         const serverEntryPath = path.resolve(root, 'dist/server/entry-server.js');
         ({ render } = await import(serverEntryPath));
       } else {
@@ -65,5 +64,5 @@ async function createServer() {
   return app;
 }
 
-// Vercel exports the app instance directly
-export default createServer();
+const app = await createServer();
+export default app;
