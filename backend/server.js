@@ -50,7 +50,8 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
+        // Allow requests from your whitelisted domains OR requests that don't have an origin
+        // (like server-to-server requests from Vercel's proxy or Prerender's crawler).
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
