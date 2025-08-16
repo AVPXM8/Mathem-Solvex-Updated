@@ -60,6 +60,7 @@ app.use(cors(corsOptions));
 app.use(express.json()); // for parsing application/json
 // This serves any files placed in the 'public' folder.
 app.use(express.static(path.join(__dirname, 'public')));
+
 // --- API Routes ---
 // The modular routing structure is excellent and remains the same.
 app.use('/api/questions', require('./routes/questionRoutes'));
@@ -118,12 +119,21 @@ app.get('/sitemap.xml', async (req, res) => {
 // --- SERVE THE REACT STUDENT PORTAL ---
 // This must come AFTER your API routes.
 app.use(express.static(path.join(__dirname, '..', 'student', 'dist')));
+// app.get('*', (req, res) => {
+//     // This check prevents API routes from being overridden by the React app
+//     if (!req.originalUrl.startsWith('/api')) {
+//         res.sendFile(path.resolve(__dirname, '..', 'student', 'dist', 'index.html'));
+//     }
+// });
 app.get('*', (req, res) => {
-    // This check prevents API routes from being overridden by the React app
     if (!req.originalUrl.startsWith('/api')) {
-        res.sendFile(path.resolve(__dirname, '..', 'student', 'dist', 'index.html'));
+        res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
     }
 });
+
+
+
+
 
 
 
