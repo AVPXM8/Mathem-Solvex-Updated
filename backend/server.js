@@ -30,8 +30,14 @@ app.set('trust proxy', 1);
 // It will intercept requests from crawlers and serve a cached, rendered version.
 const prerender = require('prerender-node');
 if (process.env.NODE_ENV === 'production' || process.env.PRERENDER_TOKEN) {
-    console.log('Prerender middleware enabled.'); 
+    console.log('Prerender middleware enabled.');
     prerender.set('prerenderToken', process.env.PRERENDER_TOKEN);
+    
+    // --- FIX: Add these two lines ---
+    // This forces Prerender to render your correct frontend domain.
+    prerender.set('protocol', 'https');
+    prerender.set('host', 'question.maarula.in'); 
+
     app.use(prerender);
 }
 
