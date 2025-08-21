@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://mathemsolvex.onrender.com/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://mathemsolvex.onrender.com/robots.txt"
+    },
+    {
       "source": "/(.*)",
       "has": [
         {

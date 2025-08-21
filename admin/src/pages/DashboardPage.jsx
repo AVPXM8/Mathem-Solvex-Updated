@@ -43,12 +43,42 @@ const DashboardPage = () => {
         fetchData();
     }, []);
 
+    // const getGreeting = () => {
+    //     const hour = new Date().getHours();
+    //     if (hour < 12) return 'Good Morning';
+    //     if (hour < 18) return 'Good Afternoon';
+    //     return 'Good Evening';
+    // };
     const getGreeting = () => {
-        const hour = new Date().getHours();
-        if (hour < 12) return 'Good Morning';
-        if (hour < 18) return 'Good Afternoon';
-        return 'Good Evening';
-    };
+    const hour = new Date().getHours();
+    let greeting;
+
+    if (hour < 12) {
+        greeting = "Good Morning";
+    } else if (hour < 18) {
+        greeting = "Good Afternoon";
+    } else {
+        greeting = "Good Evening";
+    }
+
+    // Random personalized messages 
+    const messages = [
+        "Keep pushing forward, success is near! 🚀",
+        "Believe in yourself, you're stronger than you think! 💪",
+        "Stay positive, good things are coming your way! 🌟",
+        "Consistency is the key to greatness 🔑",
+        "One step at a time, and you'll get there 🏆",
+        "Kux Jyada kam to nhi pad rha ap se contact me @9354368207"
+    ];
+
+    // Pick a random message
+    const developerMessage = messages[Math.floor(Math.random() * messages.length)];
+
+    return `${greeting},✨ Message from Vivek: ${developerMessage}`;
+};
+
+
+
 
     if (loading) return <div className={styles.loading}>Loading Dashboard...</div>;
     if (error) return <p className={styles.error}>{error}</p>;
@@ -56,7 +86,7 @@ const DashboardPage = () => {
     return (
         <div className={styles.dashboard}>
             <header className={styles.header}>
-                <h1>{getGreeting()}, {user?.name || 'Admin'}!</h1>
+                <h1>{getGreeting()}, {user?.name || 'Maarula Classes'}</h1>
                 <p>Here's a quick overview of your question bank.</p>
             </header>
 

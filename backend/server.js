@@ -1,7 +1,5 @@
 // Load environment variables and validate them FIRST
 require('dotenv').config();
-
-// This package must be required at the top, before any routes, to handle async errors
 require('express-async-errors'); 
 
 const express = require('express');
@@ -12,46 +10,24 @@ const { SitemapStream, streamToPromise } = require('sitemap');
 const { Readable } = require('stream');
 const Question = require('./models/Question'); 
 const Post = require('./models/Post');
+const prerender = require('prerender-node');
 
 // --- 1. Environment Variable Validation ---
-// This check ensures the application exits immediately if critical secrets are missing.
 if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
     console.error("FATAL ERROR: MONGODB_URI or JWT_SECRET is not defined in the .env file.");
-    process.exit(1); // Exit the process with a failure code
+    process.exit(1);
 }
 
 const app = express();
-
-// This tells Express to trust the 'X-Forwarded-For' header that Render adds.
-// It is essential for rate-limiting to work correctly in a deployed environment.
 app.set('trust proxy', 1);
-// ---  PRERENDER.IO MIDDLEWARE ---
-// This should be one of the first middleware to run.
-// It will intercept requests from crawlers and serve a cached, rendered version.
-const prerender = require('prerender-node');
-if (process.env.NODE_ENV === 'production' || process.env.PRERENDER_TOKEN) {
-    console.log('Prerender middleware enabled.');
-    prerender.set('prerenderToken', process.env.PRERENDER_TOKEN);
-    
-    // --- FIX: Add these two lines ---
-    // This forces Prerender to render your correct frontend domain.
-    prerender.set('protocol', 'https');
-    prerender.set('host', 'question.maarula.in'); 
 
-    app.use(prerender);
-}
-
-// --- 2. Secure CORS Configuration ---
-// This allows requests from your local frontend and your deployed frontend,
-// but blocks all other unknown origins in a production environment.
+// --- 2. Standard Middleware & CORS ---
 const allowedOrigins = process.env.NODE_ENV === 'production'
     ? [process.env.STUDENT_URL, process.env.ADMIN_URL] 
     : ['http://localhost:5173','http://localhost:5174'];
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests from your whitelisted domains OR requests that don't have an origin
-        // (like server-to-server requests from Vercel's proxy or Prerender's crawler).
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
@@ -61,15 +37,10 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
+app.use(express.json());
 
-
-// --- Standard Middleware ---
-app.use(express.json()); // for parsing application/json
-// This serves any files placed in the 'public' folder.
-app.use(express.static(path.join(__dirname, 'public')));
-
-// --- API Routes ---
-// The modular routing structure is excellent and remains the same.
+// --- 3. API Routes ---
+// All API routes must come BEFORE the Prerender middleware.
 app.use('/api/questions', require('./routes/questionRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
@@ -78,7 +49,17 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is healthy' });
 });
 
-// --- Dynamic Sitemap Route ---
+// --- 4. PRERENDER.IO MIDDLEWARE ---
+// This now runs AFTER the API routes have been checked.
+if (process.env.NODE_ENV === 'production' || process.env.PRERENDER_TOKEN) {
+    console.log('Prerender middleware enabled.');
+    prerender.set('prerenderToken', process.env.PRERENDER_TOKEN);
+    prerender.set('protocol', 'https');
+    prerender.set('host', 'question.maarula.in'); 
+    app.use(prerender);
+}
+
+// --- 5. Dynamic Sitemap Route ---
 app.get('/sitemap.xml', async (req, res) => {
     try {
         const links = [
@@ -123,43 +104,25 @@ app.get('/sitemap.xml', async (req, res) => {
     }
 });
 
-// --- SERVE THE REACT STUDENT PORTAL ---
-// This must come AFTER your API routes.
-app.use(express.static(path.join(__dirname, '..', 'student', 'dist')));
-// app.get('*', (req, res) => {
-//     // This check prevents API routes from being overridden by the React app
-//     if (!req.originalUrl.startsWith('/api')) {
-//         res.sendFile(path.resolve(__dirname, '..', 'student', 'dist', 'index.html'));
-//     }
-// });
+// --- 6. SERVE THE REACT STUDENT PORTAL ---
+// This is the final catch-all for any non-API, non-bot requests.
+// It now correctly serves from the 'public' folder where the build output is copied.
+app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => {
-    if (!req.originalUrl.startsWith('/api')) {
-        res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
-    }
+    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
-
-
-
-
-
-
-// --- 3. Centralized Error Handling Middleware ---
-// This special middleware will catch any errors that occur in your async route handlers,
-// preventing the server from crashing. It must be placed AFTER all your routes.
+// --- 7. Centralized Error Handling Middleware ---
 app.use((err, req, res, next) => {
-    console.error(err.stack); // Log the full error stack for debugging
+    console.error(err.stack);
     res.status(500).json({ 
         message: 'An unexpected error occurred on the server.',
-        // Only send detailed error message in development mode for security
         error: process.env.NODE_ENV === 'development' ? err.message : undefined 
     });
 });
 
-
 // --- Database Connection & Server Start ---
 const PORT = process.env.PORT || 3001;
-
 const startServer = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
@@ -171,12 +134,9 @@ const startServer = async () => {
         process.exit(1);
     }
 };
-
 startServer();
 
-// --- 4. Graceful Shutdown ---
-// This ensures that if the server process is stopped (e.g., with Ctrl+C),
-// the database connection is closed gracefully.
+// --- Graceful Shutdown ---
 process.on('SIGINT', async () => {
     await mongoose.connection.close();
     console.log('MongoDB connection is disconnected due to application termination.');

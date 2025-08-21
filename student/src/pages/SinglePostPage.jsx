@@ -51,7 +51,7 @@ const SinglePostPage = () => {
     const pageUrl = `https://question.maarula.in/articles/${post.slug}`;
     const pageTitle = `${post.title} | Maarula Classes`;
     const pageDescription = post.metaDescription || post.content.substring(0, 160).replace(/<[^>]+>/g, '');
-    const imageUrl = post.featuredImage || 'https://question.maarula.in/maarulalogo.png';
+    const imageUrl = post.featuredImage || 'https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png';
 
     const articleSchema = {
         "@context": "https://schema.org",
@@ -63,7 +63,7 @@ const SinglePostPage = () => {
         "publisher": {
             "@type": "Organization",
             "name": "Maarula Classes",
-            "logo": { "@type": "ImageObject", "url": "https://question.maarula.in/maarulalogo.png" }
+            "logo": { "@type": "ImageObject", "url": "https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png" }
         },
         "datePublished": post.createdAt,
         "dateModified": post.updatedAt
