@@ -6,8 +6,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
-const { SitemapStream, streamToPromise } = require('sitemap');
-const { Readable } = require('stream');
+const { SitemapStream } = require('sitemap');
 const Question = require('./models/Question'); 
 const Post = require('./models/Post');
 const prerender = require('prerender-node');
@@ -23,7 +22,7 @@ app.set('trust proxy', 1);
 
 // --- 2. Standard Middleware & CORS ---
 const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? [process.env.STUDENT_URL, process.env.ADMIN_URL] 
+    ? [process.env.STUDENT_URL, process.env.ADMIN_URL,BACKEND_URL] 
     : ['http://localhost:5173','http://localhost:5174'];
 
 const corsOptions = {
@@ -57,19 +56,24 @@ if (process.env.NODE_ENV === 'production' || process.env.PRERENDER_TOKEN) {
     app.use(prerender);
 }
 
-// --- 5. Dynamic Sitemap Route ---
-// This route must come BEFORE the final catch-all route.
+// --- 5. Dynamic Sitemap Route (STABLE VERSION) ---
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const links = [
-            { url: '/', changefreq: 'daily', priority: 1.0 },
-            { url: '/questions', changefreq: 'daily', priority: 0.9 },
-            { url: '/articles', changefreq: 'daily', priority: 0.9 },
-        ];
+        const hostname = process.env.STUDENT_URL || `http://${req.headers.host}`;
+        const smStream = new SitemapStream({ hostname });
 
+        res.header('Content-Type', 'application/xml');
+        smStream.pipe(res); // Pipe the stream to the response
+
+        // Add static pages
+        smStream.write({ url: '/', changefreq: 'daily', priority: 1.0 });
+        smStream.write({ url: '/questions', changefreq: 'daily', priority: 0.9 });
+        smStream.write({ url: '/articles', changefreq: 'daily', priority: 0.9 });
+
+        // Add dynamic question pages
         const questions = await Question.find({ isPublic: true }, '_id updatedAt');
         questions.forEach(q => {
-            links.push({ 
+            smStream.write({ 
                 url: `/question/${q._id}`, 
                 changefreq: 'weekly', 
                 priority: 0.7,
@@ -77,23 +81,18 @@ app.get('/sitemap.xml', async (req, res) => {
             });
         });
         
+        // Add dynamic post pages
         const posts = await Post.find({}, 'slug updatedAt');
         posts.forEach(p => {
-            links.push({ 
+            smStream.write({ 
                 url: `/articles/${p.slug}`, 
                 changefreq: 'weekly', 
                 priority: 0.8,
                 lastmod: p.updatedAt
             });
         });
-        
-        const hostname = process.env.STUDENT_URL || `http://${req.headers.host}`;
-        const stream = new SitemapStream({ hostname });
 
-        res.header('Content-Type', 'application/xml');
-
-        const xml = await streamToPromise(Readable.from(links));
-        res.send(xml.toString());
+        smStream.end(); // End the stream
 
     } catch (error) {
         console.error('Sitemap generation error:', error);
@@ -102,7 +101,6 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 // --- 6. SERVE THE REACT STUDENT PORTAL ---
-// This catch-all must be the LAST route to run.
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
