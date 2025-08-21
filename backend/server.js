@@ -40,7 +40,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // --- 3. API Routes ---
-// All API routes must come BEFORE the Prerender middleware.
 app.use('/api/questions', require('./routes/questionRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
@@ -50,7 +49,6 @@ app.get('/api/health', (req, res) => {
 });
 
 // --- 4. PRERENDER.IO MIDDLEWARE ---
-// This now runs AFTER the API routes have been checked.
 if (process.env.NODE_ENV === 'production' || process.env.PRERENDER_TOKEN) {
     console.log('Prerender middleware enabled.');
     prerender.set('prerenderToken', process.env.PRERENDER_TOKEN);
@@ -60,6 +58,7 @@ if (process.env.NODE_ENV === 'production' || process.env.PRERENDER_TOKEN) {
 }
 
 // --- 5. Dynamic Sitemap Route ---
+// This route must come BEFORE the final catch-all route.
 app.get('/sitemap.xml', async (req, res) => {
     try {
         const links = [
@@ -68,25 +67,23 @@ app.get('/sitemap.xml', async (req, res) => {
             { url: '/articles', changefreq: 'daily', priority: 0.9 },
         ];
 
-        // Fetch questions with updatedAt for the 'lastmod' sitemap field
         const questions = await Question.find({ isPublic: true }, '_id updatedAt');
         questions.forEach(q => {
             links.push({ 
                 url: `/question/${q._id}`, 
                 changefreq: 'weekly', 
                 priority: 0.7,
-                lastmod: q.updatedAt // SEO Improvement
+                lastmod: q.updatedAt
             });
         });
         
-        // Fetch posts with updatedAt for the 'lastmod' sitemap field
         const posts = await Post.find({}, 'slug updatedAt');
         posts.forEach(p => {
             links.push({ 
                 url: `/articles/${p.slug}`, 
                 changefreq: 'weekly', 
                 priority: 0.8,
-                lastmod: p.updatedAt // SEO Improvement
+                lastmod: p.updatedAt
             });
         });
         
@@ -105,8 +102,7 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 // --- 6. SERVE THE REACT STUDENT PORTAL ---
-// This is the final catch-all for any non-API, non-bot requests.
-// It now correctly serves from the 'public' folder where the build output is copied.
+// This catch-all must be the LAST route to run.
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
