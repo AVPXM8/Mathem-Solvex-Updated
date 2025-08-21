@@ -22,7 +22,7 @@ app.set('trust proxy', 1);
 
 // --- 2. Standard Middleware & CORS ---
 const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? [process.env.STUDENT_URL, process.env.ADMIN_URL,BACKEND_URL] 
+    ? [process.env.STUDENT_URL, process.env.ADMIN_URL,process.env.BACKEND_URL] 
     : ['http://localhost:5173','http://localhost:5174'];
 
 const corsOptions = {
