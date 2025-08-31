@@ -307,12 +307,15 @@
     line-height: 1.8; 
     margin-bottom: 25px; 
 }
-.mainImage { 
+/* .mainImage { 
     max-width: 100%; 
     border-radius: 8px; 
     margin: 20px 0; 
     border: 1px solid var(--border-color);
-}
+} */
+ /* updated */
+ .mainImage { display:block; width:100%; max-width:800px; margin:12px auto; }
+ .questionTitle { font-size:1.25rem; line-height:1.4; margin:8px 0 12px; }
 
 .optionsHeader {
     font-size: 1.1rem;
@@ -378,12 +381,12 @@
 .optionContent { 
     flex-grow: 1; 
 }
-.optionImage { 
+/* .optionImage { 
     max-width: 100%; 
     margin-top: 10px; 
     border-radius: 4px; 
-}
-
+} */
+.optionImage { width:100%; max-width:480px; display:block; margin-top:8px; }
 .submitContainer { 
     text-align: center;
     margin-top: 30px;

@@ -1,4 +1,6 @@
-/* --- SHARED STYLES --- */
+/* ===========================
+   Shared / Headings
+=========================== */
 .sectionTitle {
   text-align: center;
   font-size: 2.5rem;
@@ -8,159 +10,221 @@
   line-height: 1.2;
 }
 
-/* --- RESULTS SECTION --- */
+/* Focus rings for keyboard users */
+.primaryCta:focus-visible,
+.secondaryCta:focus-visible,
+.tertiaryCta:focus-visible,
+.tabButton:focus-visible,
+.ctaButton:focus-visible,
+.ctaButtonPrimary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.35);
+}
+
+/* Utility: prevent layout jumps for images you control */
+.aspect-3x2 {
+  aspect-ratio: 3 / 2;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* ===========================
+   Hero (Top block)
+=========================== */
+.hero {
+  padding: 80px 20px 40px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+.heroTitle {
+  max-width: 900px;
+  margin: 0 auto 12px;
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem);
+  line-height: 1.2;
+  color: #0f172a;
+  text-align: center;
+  font-weight: 800;
+}
+.heroSubtitle {
+  max-width: 820px;
+  margin: 0 auto 24px;
+  text-align: center;
+  color: #475569;
+  font-size: clamp(1rem, 0.95rem + 0.2vw, 1.1rem);
+  line-height: 1.6;
+}
+.heroCtas {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* CTA variants in hero */
+.primaryCta,
+.secondaryCta,
+.tertiaryCta {
+  padding: 12px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+.primaryCta {
+  background: #4f46e5;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+}
+.primaryCta:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(79, 70, 229, 0.35); }
+.secondaryCta {
+  background: #ffffff;
+  color: #1e293b;
+  border-color: #e2e8f0;
+}
+.secondaryCta:hover { background: #f8fafc; transform: translateY(-2px); }
+.tertiaryCta {
+  background: #ffffff;
+  color: #334155;
+  border-color: #e2e8f0;
+}
+.tertiaryCta:hover { background: #f8fafc; transform: translateY(-2px); }
+
+/* ===========================
+   Results Section
+=========================== */
 .resultsSection {
-  /* CHANGED: Added padding-top of 60px */
-  padding: 60px 20px; 
+  padding: 60px 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
 .tabsContainer {
-  display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; flex-wrap: wrap;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
 }
 .tabButton {
-  padding: 10px 20px; font-size: 1rem; font-weight: 600; border: none; border-radius: 8px; background-color: #f1f5f9; color: #475569; cursor: pointer; transition: all 0.3s ease;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background-color: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 .tabButton:hover { background-color: #e2e8f0; }
-.activeTab { background-color: #4f46e5; color: white; }
+.activeTab { background-color: #4f46e5; color: #ffffff; }
 .resultsGrid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  /* Helps reduce layout shift during initial render */
+  min-height: 280px;
 }
 
-/* --- CALL TO ACTION (CTA) HUB --- */
+/* ===========================
+   CTA Hub
+=========================== */
 .ctaHub {
   background-color: #f8fafc;
   padding: 60px 20px;
   text-align: center;
 }
 .ctaText {
-  max-width: 600px; margin: -20px auto 40px auto; font-size: 1.1rem; color: #334155; line-height: 1.6;
+  max-width: 600px;
+  margin: -20px auto 40px auto;
+  font-size: 1.1rem;
+  color: #334155;
+  line-height: 1.6;
 }
 .ctaButtonContainer {
-  display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 .ctaButton {
-  background-color: #4f46e5; color: white; text-decoration: none; padding: 20px 30px; border-radius: 12px; text-align: left; transition: all 0.3s ease; min-width: 280px; box-shadow: 0 8px 25px rgba(79, 70, 229, 0.2);
+  background-color: #4f46e5;
+  color: white;
+  text-decoration: none;
+  padding: 20px 30px;
+  border-radius: 12px;
+  text-align: left;
+  transition: all 0.3s ease;
+  min-width: 280px;
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.2);
 }
 .ctaButton:hover {
-  transform: translateY(-5px); box-shadow: 0 12px 30px rgba(79, 70, 229, 0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.3);
 }
 .ctaButton strong {
-  display: block; font-size: 1.2rem; margin-bottom: 5px;
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 5px;
 }
 .ctaButton span {
-  font-size: 0.9rem; opacity: 0.9;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
-/* --- FEATURES SECTION --- */
+/* ===========================
+   Features
+=========================== */
 .featuresSection {
-  padding: 60px 20px; max-width: 1200px; margin: 0 auto;
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 .featuresGrid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
 }
 .featureCard {
-  background-color: #fff; padding: 30px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
 }
 .featureCard h3 {
-  font-size: 1.5rem; margin-bottom: 15px; color: #1e293b;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #1e293b;
 }
 .featureCard p {
-  color: #475569; line-height: 1.6;
+  color: #475569;
+  line-height: 1.6;
 }
 
-/* --- INTRODUCTION SECTION (NOW AT THE END) --- */
-.introSection {
-  background-color: #f8fafc;
-  padding: 60px 20px;
-}
-.mainTitle {
-  text-align: center; font-size: 2.8rem; font-weight: 800; color: #1e293b; margin-bottom: 30px; line-height: 1.2;
-}
-.introParagraphs {
-  max-width: 800px; margin: 0 auto;
-}
-.introText {
-  font-size: 1.1rem; color: #475569; line-height: 1.8; margin-bottom: 1.5em; text-align: left;
-}
-
-/* ========================================= */
-/* --- MOBILE RESPONSIVE STYLES --- */
-/* ========================================= */
-@media (max-width: 768px) {
-  .sectionTitle {
-    font-size: 1.8rem;
-  }
-
-  /* UPDATED: Added .introSection here */
-  .resultsSection,
-  .ctaHub,
-  .featuresSection,
-  .introSection {
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-top: 40px;
-    padding-bottom: 40px;
-  }
-  
-  /* NEW: Added .mainTitle here for mobile */
-  .mainTitle {
-    font-size: 2rem;
-  }
-
-  .tabButton {
-    padding: 8px 16px; font-size: 0.9rem;
-  }
-  
-  .resultsGrid {
-    gap: 20px;
-  }
-
-  .ctaText {
-    font-size: 1rem; margin-bottom: 30px;
-  }
-
-  .featureCard h3 {
-    font-size: 1.3rem;
-  }
-}
-
-.awardSection {
-  padding: 60px 20px;
-  background-color: #f8fafc; /* A slightly different background to make it stand out */
-  text-align: center;
-}
-
-
-/* --- Styles for IMPROVED Award Section --- */
+/* ===========================
+   Awards (Improved)
+=========================== */
 .awardSection {
   padding: 80px 20px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   text-align: center;
 }
-
 .sectionHeader {
   max-width: 700px;
   margin: 0 auto 40px;
 }
-
-.sectionTitle {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #1e293b;
-  margin-bottom: 1rem;
-}
-
 .sectionSubtitle {
   font-size: 1.1rem;
   color: #475569;
   line-height: 1.6;
 }
-
-.sectionCta {
-  margin-top: 40px;
-}
-
+.sectionCta { margin-top: 40px; }
 .ctaButtonPrimary {
   background-color: #4f46e5;
   color: white;
@@ -171,15 +235,15 @@
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
 }
-
 .ctaButtonPrimary:hover {
   background-color: #4338ca;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
 }
 
-
-/* --- Styles for IMPROVED Intro Section --- */
+/* ===========================
+   Intro / About (Improved)
+=========================== */
 .introSection {
   display: grid;
   grid-template-columns: 1fr;
@@ -189,33 +253,27 @@
   max-width: 1200px;
   margin: 0 auto;
 }
-
 @media (min-width: 992px) {
   .introSection {
     grid-template-columns: 1fr 1fr;
     gap: 80px;
   }
 }
-
-.introContent {
-  text-align: left;
-}
-
+.introContent { text-align: left; }
 .mainTitle {
-    font-size: 2.8rem;
-    font-weight: 800;
-    color: #1e293b;
-    line-height: 1.2;
-    margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
 }
-
 .introText {
-    font-size: 1.1rem;
-    color: #334155;
-    line-height: 1.7;
-    margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  color: #334155;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
 }
-
 .introHighlights {
   list-style: none;
   padding: 0;
@@ -224,7 +282,6 @@
   flex-direction: column;
   gap: 1rem;
 }
-
 .introHighlights li {
   display: flex;
   align-items: center;
@@ -233,20 +290,103 @@
   font-weight: 500;
   color: #1e293b;
 }
-
 .introHighlights svg {
-  color: #10b981; /* A nice green for checkmarks */
+  color: #10b981;
   flex-shrink: 0;
 }
-
 .introImageContainer {
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
-
 .introImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ===========================
+   Mobile (global tweaks)
+=========================== */
+@media (max-width: 768px) {
+  .hero { padding: 56px 16px 28px; }
+  .heroCtas { gap: 10px; }
+  .sectionTitle { font-size: 1.8rem; }
+
+  .resultsSection,
+  .ctaHub,
+  .featuresSection,
+  .introSection {
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+
+  .mainTitle { font-size: 2rem; }
+
+  .tabButton { padding: 8px 16px; font-size: 0.9rem; }
+  .resultsGrid { gap: 20px; }
+
+  .ctaText { font-size: 1rem; margin-bottom: 30px; }
+  .featureCard h3 { font-size: 1.3rem; }
+}
+.pyqIntro {
+  padding: 60px 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pyqContent {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.pyqContent h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+.pyqContent p {
+  font-size: 1.05rem;
+  color: #475569;
+  line-height: 1.7;
+  margin-bottom: 1.2em;
+}
+
+.pyqButtons {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.primaryBtn, .secondaryBtn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+}
+
+.primaryBtn {
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+.primaryBtn:hover {
+  background-color: #4338ca;
+}
+
+.secondaryBtn {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.secondaryBtn:hover {
+  background-color: #e2e8f0;
 }

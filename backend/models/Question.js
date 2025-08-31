@@ -41,6 +41,10 @@ const questionSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-questionSchema.index({ subject: 1, exam: 1, year: -1 });
+//questionSchema.index({ subject: 1, exam: 1, year: -1 });
+questionSchema.index({ subject: 1, exam: 1, year: -1, updatedAt: -1 });
+questionSchema.index({ topic: 1, exam: 1, _id: 1 });
+questionSchema.index({ updatedAt: -1 });
+questionSchema.index({ questionText: 'text' });
 
 module.exports = mongoose.model('Question', questionSchema);

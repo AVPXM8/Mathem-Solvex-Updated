@@ -1,55 +1,62 @@
+// controllers/sitemapController.js
 const { SitemapStream, streamToPromise } = require('sitemap');
 const { Readable } = require('stream');
-const Question = require('../models/Question'); // Adjust path to your Question model
-const Post = require('../models/Post');       // Adjust path to your Post model
+const Question = require('../models/Question');
+const Post = require('../models/Post');
 
 exports.generateSitemap = async (req, res) => {
   try {
-    const links = [];
-    const baseUrl = 'https://question.maarula.in';
+    // Prefer env; otherwise use the host from the request
+    const hostFromReq = `${req.protocol}://${req.headers.host}`.replace(/\/+$/, '');
+    const baseUrl = (process.env.STUDENT_URL || hostFromReq).replace(/\/+$/, '');
 
-    // 1. Add static pages
+    const links = [];
+
+    // 1) Static pages
     links.push({ url: '/', changefreq: 'daily', priority: 1.0 });
     links.push({ url: '/questions', changefreq: 'daily', priority: 0.9 });
-    links.push({ url: '/articles', changefreq: 'weekly', priority: 0.8 });
+    links.push({ url: '/articles', changefreq: 'daily', priority: 0.9 });
 
-    // 2. Fetch all public questions from the database
-    const questions = await Question.find({ isPublic: true }).select('_id updatedAt');
-    questions.forEach(question => {
+    // 2) Dynamic QUESTION pages
+    // NOTE: do NOT filter by isPublic if you removed that field
+    const questions = await Question.find({}, '_id updatedAt', { lean: true })
+      .sort({ updatedAt: -1 })
+      .limit(10000); // safety cap; increase if needed
+
+    for (const q of questions) {
       links.push({
-        url: `/question/${question._id}`,
+        url: `/question/${q._id}`,
         changefreq: 'weekly',
         priority: 0.7,
-        lastmod: question.updatedAt,
+        lastmod: q?.updatedAt ? new Date(q.updatedAt).toISOString() : undefined
       });
-    });
+    }
 
-    // 3. Fetch all posts from the database
-    const posts = await Post.find().select('slug updatedAt');
-    posts.forEach(post => {
+    // 3) Dynamic ARTICLE pages
+    const posts = await Post.find({}, 'slug updatedAt', { lean: true })
+      .sort({ updatedAt: -1 })
+      .limit(10000);
+
+    for (const p of posts) {
+      if (!p.slug) continue;
       links.push({
-        url: `/articles/${post.slug}`,
-        changefreq: 'monthly',
-        priority: 0.6,
-        lastmod: post.updatedAt,
+        url: `/articles/${p.slug}`,
+        changefreq: 'weekly',
+        priority: 0.8,
+        lastmod: p?.updatedAt ? new Date(p.updatedAt).toISOString() : undefined
       });
-    });
+    }
 
-    // Create a stream to write to
-    const stream = new SitemapStream({ hostname: baseUrl });
+    // 4) Build and send
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    // Cache for 1 hour at edge and client
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
 
-    // Set the response header to XML
-    res.writeHead(200, {
-      'Content-Type': 'application/xml'
-    });
-
-    // Pipe the sitemap stream to the response
-    const xmlStream = Readable.from(links).pipe(stream);
-    const sitemap = await streamToPromise(xmlStream);
-    res.end(sitemap.toString());
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error generating sitemap');
+    const smStream = new SitemapStream({ hostname: baseUrl });
+    const xml = await streamToPromise(Readable.from(links).pipe(smStream));
+    return res.status(200).end(xml.toString());
+  } catch (err) {
+    console.error('Sitemap generation error:', err);
+    return res.status(500).send('Error generating sitemap');
   }
 };

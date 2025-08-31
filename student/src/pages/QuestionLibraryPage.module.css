@@ -208,3 +208,70 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+/* --- Global containment: never allow page-wide horizontal scrolling --- */
+html, body {
+  overflow-x: hidden;
+}
+
+/* --- MathJax: prevent overflow and allow wrapping on mobile --- */
+.mjx-container {
+  max-width: 100% !important;       /* never overflow the card */
+  overflow-x: auto;                  /* scroll only the formula if needed */
+  -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+}
+.mjx-container[display="true"] {
+  display: block;                    /* ensure block context for display equations */
+}
+.mjx-chtml {                         /* MathJax HTML output wrapper */
+  white-space: normal !important;    /* allow line breaks */
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;/* gently break long pieces if needed */
+}
+
+/* --- Images/SVG inside question & options: fully responsive --- */
+.questionText img,
+.option img,
+.questionText svg,
+.option svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* --- Safer mobile wrapping for long tokens (IDs, LaTeX text, etc.) --- */
+.questionText,
+.option {
+  /* prefer natural breaks first */
+  word-break: normal;               /* overrides your earlier break-all */
+  overflow-wrap: anywhere;          /* lets the browser break long tokens only when necessary */
+  /* keep your scrollbar styling if you want local horizontal scroll: */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* --- Avoid CLS: reserve space for tags & header row --- */
+.tags { min-height: 28px; }         /* reserve at least one line for tags */
+.listHeader { min-height: 32px; }   /* keeps header height stable during loading */
+
+/* --- Touch-friendly buttons --- */
+.filterGroup button {
+  min-height: 40px;                 /* better tap targets on mobile */
+}
+
+/* --- Mobile drawer: prefers-reduced-motion friendly --- */
+@media (prefers-reduced-motion: reduce) {
+  .filterSidebar {
+    transition: none !important;
+  }
+}
+
+/* --- Optional: keep the card content from growing too tall on very small screens --- */
+/* show ~10 lines then hint there's more; user goes into the question page for full view */
+@media (max-width: 420px) {
+  .questionText {
+    display: -webkit-box;
+    -webkit-line-clamp: 10;         /* clamp to ~10 lines */
+    line-clamp: 10;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

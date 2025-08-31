@@ -30,7 +30,7 @@ export const summaryBanners = [
   {
     id: 'banner-award',
     altText: 'NIMCET 2025 selected students from Maarula Classes',
-    imageUrl: 'https://res.cloudinary.com/dwmj6up6j/image/upload/v1755783846/award_limbf6.jpg'
+    imageUrl: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1755922118/19_-_08_-_25_3_v5u2bj.jpg'
   },
   {
     id: 'banner-nimcet',
