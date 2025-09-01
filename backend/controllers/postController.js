@@ -1,129 +1,169 @@
 const Post = require('../models/Post');
 const cloudinary = require('../config/cloudinary');
 
-// This is a helper function to create a URL-friendly slug.
-// By placing it here, it's available to all functions in this file.
-const generateSlug = (title) => {
-    if (!title) return '';
-    return title
-        .toLowerCase()
-        .replace(/&/g, 'and')
-        .replace(/[^a-z0-9\s-]/g, '') // Remove all special characters
-        .replace(/\s+/g, '-')       // Replace spaces with hyphens
-        .replace(/-+/g, '-');        // Remove any duplicate hyphens
-};
+// Helper: slugify title consistently
+const generateSlug = (title = '') =>
+  title
+    .toString()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 
-// @desc    Get all posts
+// GET /api/posts  (public list)
 exports.getPosts = async (req, res) => {
-    const posts = await Post.find().sort({ createdAt: -1 });
-    res.status(200).json(posts);
+  try {
+    // Optional basic pagination
+    const page = Math.max(1, parseInt(req.query.page || '1', 10));
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || '12', 10)));
+    const skip = (page - 1) * limit;
+
+    // Projection: small card data (fast)
+    const projection = 'title slug category featuredImage createdAt updatedAt';
+    const [posts, total] = await Promise.all([
+      Post.find({}, projection, { lean: true })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Post.countDocuments({})
+    ]);
+
+    res.set('Cache-Control', 'public, max-age=60'); // 60s cache OK for list
+    res.status(200).json({ posts, total, page, totalPages: Math.ceil(total / limit) });
+  } catch (e) {
+    console.error('getPosts error:', e);
+    res.status(500).json({ message: 'Server error fetching posts' });
+  }
 };
 
-// @desc    Get a single post by its ID (for admin editing)
+// GET /api/posts/id/:id  (admin edit view)
 exports.getPostById = async (req, res) => {
-    const post = await Post.findById(req.params.id);
-    if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-    }
+  try {
+    const post = await Post.findById(req.params.id, {}, { lean: true });
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    res.set('Cache-Control', 'no-store');
     res.status(200).json(post);
+  } catch (e) {
+    console.error('getPostById error:', e);
+    res.status(500).json({ message: 'Server error fetching post' });
+  }
 };
 
-// @desc    Get a single post by its slug (for public viewing)
+// GET /api/posts/:slug  (public detail)
 exports.getPostBySlug = async (req, res) => {
-    const post = await Post.findOne({ slug: req.params.slug });
-    if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-    }
+  try {
+    const post = await Post.findOne({ slug: req.params.slug }, {}, { lean: true });
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    res.set('Cache-Control', 'public, max-age=300'); // 5 min cache OK for public page
     res.status(200).json(post);
+  } catch (e) {
+    console.error('getPostBySlug error:', e);
+    res.status(500).json({ message: 'Server error fetching post' });
+  }
 };
 
-// @desc    Create a new post
+// POST /api/posts  (admin create)
 exports.createPost = async (req, res) => {
-    const { title, content, category, metaDescription, keywords,videoURL } = req.body;
-    
+  try {
+    const { title, content, category, metaDescription, keywords, videoURL } = req.body;
     if (!title || !content || !category) {
-        return res.status(400).json({ message: 'Title, content, and category are required.' });
+      return res.status(400).json({ message: 'Title, content, and category are required.' });
     }
 
-    // 1. Generate the slug from the title
     const slug = generateSlug(title);
 
-    // 2. Check if a post with this slug already exists
-    const slugExists = await Post.findOne({ slug });
+    // slug uniqueness
+    const slugExists = await Post.exists({ slug });
     if (slugExists) {
-        return res.status(400).json({ message: 'A post with this title already exists. Please choose a unique title.' });
+      return res.status(400).json({ message: 'A post with this title already exists. Please choose a unique title.' });
     }
 
     const postData = {
-        title,
-        content,
-        slug, // Add the generated slug
-        category,
-        metaDescription,
-        keywords: keywords ? keywords.split(',').map(k => k.trim()) : [],
-        author: req.user.username,
-        videoURL,
+      title,
+      content,
+      slug,
+      category,
+      metaDescription,
+      keywords: Array.isArray(keywords)
+        ? keywords
+        : (typeof keywords === 'string' ? keywords.split(',').map(k => k.trim()).filter(Boolean) : []),
+      author: req.user?.username || 'Maarula Classes',
+      videoURL
     };
 
-    // 3. Handle the featured image upload, if it exists
     if (req.file) {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        postData.featuredImage = result.secure_url;
+      const result = await cloudinary.uploader.upload(req.file.path);
+      postData.featuredImage = result.secure_url;
     }
 
-    const newPost = new Post(postData);
-    await newPost.save();
+    const newPost = await Post.create(postData);
     res.status(201).json(newPost);
+  } catch (e) {
+    console.error('createPost error:', e);
+    res.status(500).json({ message: 'Server error creating post' });
+  }
 };
 
-// @desc    Update a post
+// PUT /api/posts/:id  (admin update)
 exports.updatePost = async (req, res) => {
+  try {
     const updateData = { ...req.body };
 
-    // If the title is being updated, we must regenerate the slug
+    // Normalize keywords
+    if (updateData.keywords) {
+      updateData.keywords = Array.isArray(updateData.keywords)
+        ? updateData.keywords
+        : updateData.keywords.split(',').map(k => k.trim()).filter(Boolean);
+    }
+
+    // If title changes, regenerate slug and check uniqueness (excluding current doc)
     if (updateData.title) {
-        updateData.slug = generateSlug(updateData.title);
-    }
-    
-    // If keywords are provided, convert them into an array
-   if (updateData.keywords && typeof updateData.keywords === 'string') {
-        updateData.keywords = updateData.keywords.split(',').map(k => k.trim());
+      const newSlug = generateSlug(updateData.title);
+      const exists = await Post.exists({ slug: newSlug, _id: { $ne: req.params.id } });
+      if (exists) {
+        return res.status(400).json({ message: 'Another post already uses that title/slug.' });
+      }
+      updateData.slug = newSlug;
     }
 
-    // Handle a new featured image upload during an update
+    // New featured image
     if (req.file) {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        updateData.featuredImage = result.secure_url;
+      const result = await cloudinary.uploader.upload(req.file.path);
+      updateData.featuredImage = result.secure_url;
     }
 
-    const updatedPost = await Post.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (!updatedPost) {
-        return res.status(404).json({ message: 'Post not found' });
-    }
-    res.status(200).json(updatedPost);
+    const updated = await Post.findByIdAndUpdate(req.params.id, updateData, { new: true, lean: true });
+    if (!updated) return res.status(404).json({ message: 'Post not found' });
+    res.status(200).json(updated);
+  } catch (e) {
+    console.error('updatePost error:', e);
+    res.status(500).json({ message: 'Server error updating post' });
+  }
 };
-// @desc    Delete a post
+
+// DELETE /api/posts/:id  (admin delete)
 exports.deletePost = async (req, res) => {
+  try {
     const post = await Post.findById(req.params.id);
-    if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-    }
+    if (!post) return res.status(404).json({ message: 'Post not found' });
     await post.deleteOne();
     res.status(200).json({ message: 'Post deleted successfully' });
+  } catch (e) {
+    console.error('deletePost error:', e);
+    res.status(500).json({ message: 'Server error deleting post' });
+  }
 };
+
+// POST /api/posts/upload-image  (admin editor images)
 exports.uploadEditorImage = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'No image file provided.' });
-        }
-        // Upload the image to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path);
-
-        // The editor expects a specific JSON format back with the URL
-        res.status(200).json({ location: result.secure_url });
-
-    } catch (error) {
-        console.error('Editor image upload error:', error);
-        res.status(500).json({ message: 'Server error during image upload.' });
-    }
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No image file provided.' });
+    const result = await cloudinary.uploader.upload(req.file.path);
+    res.status(200).json({ location: result.secure_url });
+  } catch (e) {
+    console.error('Editor image upload error:', e);
+    res.status(500).json({ message: 'Server error during image upload.' });
+  }
 };
