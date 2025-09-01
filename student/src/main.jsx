@@ -5,10 +5,11 @@ import './index.css';
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter } from 'react-router-dom';
 
-ReactDOM.hydrateRoot(
-  document.getElementById('root'),
+const helmetContext = {};
+
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <HelmetProvider>
+    <HelmetProvider context={helmetContext}>
       <BrowserRouter>
         <App />
       </BrowserRouter>

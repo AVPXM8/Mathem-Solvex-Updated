@@ -1,38 +1,41 @@
-// controllers/sitemapController.js
-const { SitemapStream, streamToPromise } = require('sitemap');
+const { SitemapStream } = require('sitemap');
 const { Readable } = require('stream');
-const Question = require('../models/Question');
-const Post = require('../models/Post');
+const mongoose = require('mongoose');
+const Question = require('../models/Question'); // CommonJS export
+const Post = require('../models/Post');         // CommonJS export
 
 exports.generateSitemap = async (req, res) => {
   try {
-    // Prefer env; otherwise use the host from the request
+    // Ensure DB is connected (avoids cold-start race)
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connection.asPromise();
+    }
+
     const hostFromReq = `${req.protocol}://${req.headers.host}`.replace(/\/+$/, '');
-    const baseUrl = (process.env.STUDENT_URL || hostFromReq).replace(/\/+$/, '');
+    const hostname = (process.env.STUDENT_URL || hostFromReq).replace(/\/+$/, '');
 
-    const links = [];
+    // Build links
+    const links = [
+      { url: '/', changefreq: 'daily', priority: 1.0 },
+      { url: '/questions', changefreq: 'daily', priority: 0.9 },
+      { url: '/articles', changefreq: 'daily', priority: 0.9 },
+    ];
 
-    // 1) Static pages
-    links.push({ url: '/', changefreq: 'daily', priority: 1.0 });
-    links.push({ url: '/questions', changefreq: 'daily', priority: 0.9 });
-    links.push({ url: '/articles', changefreq: 'daily', priority: 0.9 });
-
-    // 2) Dynamic QUESTION pages
-    // NOTE: do NOT filter by isPublic if you removed that field
+    // QUESTIONS — no isPublic filter if you removed that field
     const questions = await Question.find({}, '_id updatedAt', { lean: true })
       .sort({ updatedAt: -1 })
-      .limit(10000); // safety cap; increase if needed
+      .limit(10000);
 
     for (const q of questions) {
       links.push({
         url: `/question/${q._id}`,
         changefreq: 'weekly',
         priority: 0.7,
-        lastmod: q?.updatedAt ? new Date(q.updatedAt).toISOString() : undefined
+        lastmod: q?.updatedAt ? new Date(q.updatedAt).toISOString() : undefined,
       });
     }
 
-    // 3) Dynamic ARTICLE pages
+    // POSTS
     const posts = await Post.find({}, 'slug updatedAt', { lean: true })
       .sort({ updatedAt: -1 })
       .limit(10000);
@@ -43,20 +46,25 @@ exports.generateSitemap = async (req, res) => {
         url: `/articles/${p.slug}`,
         changefreq: 'weekly',
         priority: 0.8,
-        lastmod: p?.updatedAt ? new Date(p.updatedAt).toISOString() : undefined
+        lastmod: p?.updatedAt ? new Date(p.updatedAt).toISOString() : undefined,
       });
     }
 
-    // 4) Build and send
+    // Stream out XML
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    // Cache for 1 hour at edge and client
     res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
 
-    const smStream = new SitemapStream({ hostname: baseUrl });
-    const xml = await streamToPromise(Readable.from(links).pipe(smStream));
-    return res.status(200).end(xml.toString());
+    const sm = new SitemapStream({ hostname });
+    sm.on('error', (e) => {
+      console.error('Sitemap stream error:', e);
+      if (!res.headersSent) res.status(500).end('Error generating sitemap');
+    });
+
+    sm.pipe(res);
+    for (const link of links) sm.write(link);
+    sm.end();
   } catch (err) {
-    console.error('Sitemap generation error:', err);
-    return res.status(500).send('Error generating sitemap');
+    console.error('Sitemap generation error (outer):', err);
+    if (!res.headersSent) res.status(500).send('Error generating sitemap');
   }
 };
