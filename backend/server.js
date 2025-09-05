@@ -1,38 +1,46 @@
+// --- 0) INITIALIZATION ---
 // Load environment variables and validate them FIRST
 require('dotenv').config();
 require('express-async-errors');
 
+// NPM Packages
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const compression = require('compression');
 const helmet = require('helmet');
-const prerender = require('prerender-node');
 
-// Controllers
+// Local Modules
 const { generateSitemap } = require('./controllers/sitemapController');
 
-// --- 1) ENV VALIDATION ---
+// Ensure Mongoose models are registered for operations like syncIndexes
+require('./models/Question');
+require('./models/Post');
+
+
+// --- 1) ENVIRONMENT VALIDATION ---
 if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
-  console.error('FATAL ERROR: MONGODB_URI or JWT_SECRET is not defined in the .env file.');
+  console.error('FATAL ERROR: MONGODB_URI or JWT_SECRET is not defined.');
   process.exit(1);
 }
 
-const app = express();
-app.set('trust proxy', 1); // important on Render/behind proxies
 
-// --- 2) CORE MIDDLEWARE (order matters) ---
-app.use(compression());
+// --- 2) EXPRESS APP SETUP ---
+const app = express();
+app.set('trust proxy', 1); // Required for rate limiting and secure cookies behind a proxy (e.g., on Render)
+app.disable('x-powered-by'); // Security: Hide the fact that we are using Express
+
+
+// --- 3) CORE MIDDLEWARE ---
+app.use(compression()); // Compress responses for better performance
 app.use(
-  helmet({
-    contentSecurityPolicy: false,
+  helmet({ // Set various security-related HTTP headers
+    contentSecurityPolicy: false, // Allow inline scripts, etc., if needed by an admin panel
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    crossOriginOpenerPolicy: { policy: 'same-origin' },
-    crossOriginResourcePolicy: { policy: 'cross-origin' }
   })
 );
 
-// CORS: only allow your student/admin frontends
+// CORS Configuration
 const allowedOrigins =
   process.env.NODE_ENV === 'production'
     ? [process.env.STUDENT_URL, process.env.ADMIN_URL].filter(Boolean)
@@ -40,52 +48,35 @@ const allowedOrigins =
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('This origin is not allowed by CORS'));
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    
+    // Disallow other origins without throwing an error
+    return callback(null, false);
   },
-  optionsSuccessStatus: 200
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200, // For legacy browser support
 };
 app.use(cors(corsOptions));
 
-// Parse JSON bodies with a sane limit
+// JSON Body Parser
 app.use(express.json({ limit: '1mb' }));
 
-// (Nice-to-have) Ensure APIs are not indexed by crawlers
+// Tell crawlers not to index any API endpoints
 app.use('/api', (req, res, next) => {
   res.set('X-Robots-Tag', 'noindex');
   next();
 });
 
-// --- 3) PRERENDER FOR BOTS (mount BEFORE your API routes) ---
-if (process.env.PRERENDER_TOKEN) {
-  console.log('Prerender enabled');
 
-  prerender.set('prerenderToken', process.env.PRERENDER_TOKEN);
-  // Tell prerender which public site to fetch and render
-  prerender.set('protocol', 'https');
-  prerender.set('host', 'question.maarula.in');
-
-  // Only prerender HTML pages we care about
-  prerender.set('whitelisted', [
-    /^\/$/,                 // home
-    /^\/questions$/,        // questions list
-    /^\/articles$/,         // blog index
-    /^\/question\/.*/,      // question detail
-    /^\/articles\/.*/       // post detail
-  ]);
-
-  // Never prerender APIs or static files
-  prerender.set('blacklisted', [
-    /^\/api\/.*/,           // APIs
-    /\.[0-9a-z]+$/i         // assets: .js .css .png ...
-  ]);
-
-  app.use(prerender);
-}
-
-// --- 4) UTILITY ROUTES: robots.txt & sitemap.xml (ONE OF EACH) ---
+// --- 4) UTILITY ROUTES ---
+// These are proxied from the Vercel frontend via vercel.json
 app.get('/robots.txt', (req, res) => {
-  const host = (process.env.STUDENT_URL || `https://${req.headers.host}`).replace(/\/+$/, '');
+  const host = (process.env.PUBLIC_SITE_URL || `https://${req.headers.host}`).replace(/\/+$/, '');
+  res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
   res.type('text/plain').send(
 `User-agent: *
 Allow: /
@@ -95,49 +86,57 @@ Sitemap: ${host}/sitemap.xml
   );
 });
 
-app.get('/sitemap.xml', generateSitemap);
+app.get('/sitemap.xml', (req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+  next();
+}, generateSitemap);
 
-// --- 5) API ROUTES (backend only; frontend is on Vercel) ---
+
+// --- 5) API ROUTES ---
 app.use('/api/questions', require('./routes/questionRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/posts', require('./routes/postRoutes'));
 
 app.get('/api/health', (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  res.status(200).json({ status: 'ok', message: 'Server is healthy' });
+  res.set('Cache-Control', 'no-store'); // Never cache the health check
+  res.status(200).json({ status: 'ok', uptimeSec: Math.floor(process.uptime()) });
 });
 
-// --- 6) 404 + ERROR HANDLERS ---
+
+// --- 6) ERROR HANDLING ---
+// 404 Handler for routes not found
 app.use((req, res) => {
-  res.status(404).json({ message: 'Not found' });
+  res.status(404).json({ message: 'Not Found' });
 });
 
+// Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     message: 'An unexpected error occurred on the server.',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    // Only show error details in development
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
 
-// --- 7) DB CONNECT & START ---
+
+// --- 7) SERVER & DATABASE STARTUP ---
 const PORT = process.env.PORT || 3001;
 
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 8000,
-      socketTimeoutMS: 20000
+      socketTimeoutMS: 20000,
     });
 
-    // Ensure Question indexes are created/updated
+    // Ensure Mongoose text indexes are created on startup
     await mongoose.model('Question').syncIndexes();
     await mongoose.model('Post').syncIndexes();
 
-
     console.log('✅ Connected to MongoDB & indexes synced');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) {
     console.error('❌ Could not connect to MongoDB. Exiting...');
     console.error(err);
@@ -146,9 +145,15 @@ const startServer = async () => {
 };
 startServer();
 
+
 // --- 8) GRACEFUL SHUTDOWN ---
-process.on('SIGINT', async () => {
+const shutdown = async (signal) => {
+  console.log(`\nReceived ${signal}. Closing MongoDB connection...`);
   await mongoose.connection.close();
-  console.log('MongoDB connection is disconnected due to application termination.');
+  console.log('MongoDB connection closed. Exiting process.');
   process.exit(0);
-});
+};
+
+// Listen for termination signals
+process.on('SIGINT', () => shutdown('SIGINT')); // Ctrl+C
+process.on('SIGTERM', () => shutdown('SIGTERM')); // Standard shutdown signal

@@ -1,56 +1,17 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "https://mathemsolvex.onrender.com/sitemap.xml" },
-    { "source": "/robots.txt",  "destination": "https://mathemsolvex.onrender.com/robots.txt" },
-
-    
-    {
-      "source": "/",
-      "has": [{ "type": "header", "key": "User-Agent",
-        "value": ".*(googlebot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|DuckDuckBot|baiduspider|yandexbot|facebot|ia_archiver|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Discordbot|facebookexternalhit).*"
-      }],
-      "destination": "https://mathemsolvex.onrender.com/"
+    { 
+      "source": "/robots.txt", 
+      "destination": "https://mathemsolvex.onrender.com/robots.txt" 
     },
-    {
-      "source": "/questions",
-      "has": [{ "type": "header", "key": "User-Agent",
-        "value": ".*(googlebot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|DuckDuckBot|baiduspider|yandexbot|facebot|ia_archiver|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Discordbot|facebookexternalhit).*"
-      }],
-      "destination": "https://mathemsolvex.onrender.com/questions"
+    { 
+      "source": "/sitemap.xml", 
+      "destination": "https://mathemsolvex.onrender.com/sitemap.xml" 
     },
-    {
-      "source": "/articles",
-      "has": [{ "type": "header", "key": "User-Agent",
-        "value": ".*(googlebot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|DuckDuckBot|baiduspider|yandexbot|facebot|ia_archiver|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Discordbot|facebookexternalhit).*"
-      }],
-      "destination": "https://mathemsolvex.onrender.com/articles"
-    },
-    {
-      "source": "/question/(.*)",
-      "has": [{ "type": "header", "key": "User-Agent",
-        "value": ".*(googlebot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|DuckDuckBot|baiduspider|yandexbot|facebot|ia_archiver|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Discordbot|facebookexternalhit).*"
-      }],
-      "destination": "https://mathemsolvex.onrender.com/question/$1"
-    },
-    {
-      "source": "/articles/(.*)",
-      "has": [{ "type": "header", "key": "User-Agent",
-        "value": ".*(googlebot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|DuckDuckBot|baiduspider|yandexbot|facebot|ia_archiver|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Discordbot|facebookexternalhit).*"
-      }],
-      "destination": "https://mathemsolvex.onrender.com/articles/$1"
-    },
-    {
-      "source": "/report-issue/(.*)",
-      "has": [{ "type": "header", "key": "User-Agent",
-        "value": ".*(googlebot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|DuckDuckBot|baiduspider|yandexbot|facebot|ia_archiver|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Discordbot|facebookexternalhit).*"
-      }],
-      "destination": "https://mathemsolvex.onrender.com/report-issue/$1"
-    },
-
-    
-    {
-      "source": "/((?!api|assets|_next|static|images|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|service-worker\\.js|.*\\..*).*)",
-      "destination": "/index.html"
+    { 
+      "source": "/((?!api|.*\\..*).*)", 
+      "destination": "/index.html" 
     }
   ]
 }
