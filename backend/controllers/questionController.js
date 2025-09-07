@@ -162,46 +162,31 @@ exports.getPublicQuestions = async (req, res) => {
  * Fetches a single question by ID for public view (without sensitive data).
  * (Added this for completeness, often needed for student view of a single question)
  */
+
 exports.getPublicQuestionById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: 'Invalid question ID' });
-        }
-        const question = await Question.findById(id)
-            .select('-__v -createdAt -updatedAt -explanationText -explanationImageURL -videoURL -correctOption'); // Exclude sensitive/large fields
-        if (!question) {
-            return res.status(404).json({ message: 'Question not found' });
-        }
-        setCache(res, 120, 600);
-        res.status(200).json(question);
-    } catch (error) {
-        console.error('Error fetching public question by ID:', error);
-        res.status(500).json({ message: 'Internal server error', error: error.message });
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid question ID' });
     }
-};
 
-/**
- * GET /api/questions/:id (Admin/Protected)
- * Fetches a single question by ID, including all fields.
- */
-exports.getQuestionById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: 'Invalid question ID' });
-        }
+    // Public projection: keep what the student page needs; hide only internal meta
+    const projection = '-__v'; // keep createdAt/updatedAt for SEO; expose options + isCorrect, explanation & video
 
-        const question = await Question.findById(id).lean();
-
-        if (!question) return res.status(404).json({ message: 'Question not found' });
-
-        setCache(res, 120, 600);
-        res.status(200).json(question);
-    } catch (error) {
-        console.error('Error fetching question by ID:', error);
-        res.status(500).json({ message: 'Server Error' });
+    const question = await Question.findById(id).select(projection).lean();
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
     }
+
+    if (!Array.isArray(question.options)) question.options = [];
+
+    setCache(res, 120, 600);
+    return res.status(200).json(question);
+  } catch (error) {
+    console.error('Error fetching public question by ID:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
 };
 
 /**
@@ -285,6 +270,27 @@ exports.createQuestion = async (req, res) => {
         }
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
+};
+
+// Admin/Protected: GET /api/questions/:id
+exports.getQuestionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid question ID' });
+    }
+
+    const question = await Question.findById(id).lean();
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+
+    setCache(res, 120, 600);
+    return res.status(200).json(question);
+  } catch (error) {
+    console.error('Error fetching question by ID:', error);
+    return res.status(500).json({ message: 'Server Error' });
+  }
 };
 
 /**
