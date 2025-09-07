@@ -1,152 +1,201 @@
-// export default SingleQuestionPage;
-import React, { useState, useEffect, useRef } from 'react';
+// SingleQuestionPage.jsx — FINAL (SEO-friendly title, keyboard UX, public API, robust fetching)
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../api';
+import { Helmet } from 'react-helmet-async';
 import ReactPlayer from 'react-player/youtube';
+import api from '../api';
 import useMathJax from '../hooks/useMathJax';
 import MathPreview from '../components/MathPreview';
 import { reRenderMathJax } from '../utils/mathjax';
-import { Helmet } from 'react-helmet-async';
 import styles from './SingleQuestionPage.module.css';
-import { QuestionListSkeleton } from '../components/SkeletonLoader';
 
-// ---- helpers for safe SEO text ----
-const stripHtmlAndMath = (s = '') =>
-  s
-    .replace(/<[^>]+>/g, ' ')          // strip HTML tags
-    .replace(/\$+[^$]*\$+/g, ' ')      // strip $...$ LaTeX
-    .replace(/\\\[.*?\\\]/gs, ' ')     // strip \[...\] LaTeX blocks
-    .replace(/\\\((.|\n)*?\\\)/g, ' ') // strip \( ... \)
-    .replace(/\s+/g, ' ')
-    .trim();
-
+/* ----------------------------- helpers ----------------------------- */
+const toPlainText = (s = '') => {
+  const noTags = s
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\$+[^$]*\$+/g, ' ')
+    .replace(/\\\[.*?\\\]/gs, ' ')
+    .replace(/\\\((.|\n)*?\\\)/g, ' ');
+  const decoded = noTags
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+  return decoded.replace(/\s+/g, ' ').trim();
+};
 const truncate = (s = '', n = 160) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
-const esc = (s = '') =>
-  s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const esc = (s = '') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const SingleQuestionPage = () => {
+/* ----------------------------- component ----------------------------- */
+export default function SingleQuestionPage() {
   const { id } = useParams();
+
   const [question, setQuestion] = useState(null);
+  const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [relatedQuestions, setRelatedQuestions] = useState([]);
+
   const [selectedOption, setSelectedOption] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const explanationRef = useRef(null);
+  const [showCorrect, setShowCorrect] = useState(false);
+
   const feedbackRef = useRef(null);
 
-  // Re-render MathJax when data changes
-  useMathJax([question, relatedQuestions]);
+  useMathJax([question, related, showExplanation]);
 
+  /* ----------------------------- fetch ----------------------------- */
   useEffect(() => {
-    setLoading(true);
-    // reset view for new id
-    setQuestion(null);
-    setRelatedQuestions([]);
-    setShowExplanation(false);
-    setShowVideo(false);
-    setIsSubmitted(false);
-    setSelectedOption(null);
+    let alive = true;
+    const qCtrl = new AbortController();
+    const rCtrl = new AbortController();
 
-    const fetchAllData = async () => {
+    async function fetchData() {
       try {
-        const [questionRes, relatedRes] = await Promise.all([
-          api.get(`/questions/${id}`),
-          api.get(`/questions/${id}/related`)
-        ]);
-        setQuestion(questionRes.data);
-        setRelatedQuestions(relatedRes.data);
-      } catch (err) {
-        console.error('Failed to fetch question data', err);
+        setLoading(true);
         setQuestion(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+        setRelated([]);
+        setSelectedOption(null);
+        setIsSubmitted(false);
+        setShowExplanation(false);
+        setShowVideo(false);
+        setShowCorrect(false);
 
-    fetchAllData();
-    // scroll to top on route change
-    window.scrollTo(0, 0);
+        const [qRes, rRes] = await Promise.all([
+          api.get(`/questions/public/${id}`, { signal: qCtrl.signal }),
+          api.get(`/questions/public/${id}/related`, { signal: rCtrl.signal })
+        ]);
+
+        if (!alive) return;
+        setQuestion(qRes.data);
+        setRelated(Array.isArray(rRes.data) ? rRes.data : []);
+      } catch (err) {
+        if (err?.name !== 'CanceledError' && err?.message !== 'canceled') {
+          console.error('Failed to load question', err);
+          setQuestion(null);
+          setRelated([]);
+        }
+      } finally {
+        alive && setLoading(false);
+        window.scrollTo(0, 0);
+      }
+    }
+
+    fetchData();
+    return () => {
+      alive = false;
+      qCtrl.abort();
+      rCtrl.abort();
+    };
   }, [id]);
 
+  /* ----------------------------- keyboard shortcuts ----------------------------- */
   useEffect(() => {
-    if (isSubmitted && feedbackRef.current) {
-      feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [isSubmitted]);
+    const onKey = (e) => {
+      const k = e.key.toLowerCase();
+      if (!question) return;
 
-  const handleOptionSelect = (index) => {
-    if (!isSubmitted) {
-      setSelectedOption(index);
-      setIsSubmitted(true);
-      setShowExplanation(true);
-      setTimeout(reRenderMathJax, 0);
-    }
+      if (['1','2','3','4'].includes(k)) {
+        const idx = Number(k) - 1;
+        if (idx < question.options.length && !isSubmitted) {
+          e.preventDefault();
+          handleOptionSelect(idx);
+        }
+      }
+      if (['a','b','c','d'].includes(k)) {
+        const idx = {a:0,b:1,c:2,d:3}[k];
+        if (idx < question.options.length && !isSubmitted) {
+          e.preventDefault();
+          handleOptionSelect(idx);
+        }
+      }
+      if (k === 'e') { e.preventDefault(); toggleExplanation(); }
+      if (k === 'v') { if (question.videoURL) { e.preventDefault(); setShowVideo(s => !s); } }
+      if (k === 's') { e.preventDefault(); revealAnswer(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question, isSubmitted]);
+
+  /* ----------------------------- actions ----------------------------- */
+  const handleOptionSelect = (idx) => {
+    if (isSubmitted) return;
+    setSelectedOption(idx);
+    setIsSubmitted(true);
+    setShowExplanation(true);
+    setShowCorrect(false);
+    setTimeout(reRenderMathJax, 0);
+    setTimeout(() => feedbackRef.current?.scrollIntoView({ behavior:'smooth', block:'center'}), 10);
   };
 
-  const handleSubmit = () => {
-    if (selectedOption === null) {
-      alert('Please select an option first.');
-      return;
-    }
+  const submitIfChosen = () => {
+    if (selectedOption === null) return;
     setIsSubmitted(true);
     setTimeout(reRenderMathJax, 0);
   };
 
-  const handleToggleExplanation = () => {
+  const toggleExplanation = () => {
     setShowExplanation(prev => {
       setTimeout(reRenderMathJax, 0);
       return !prev;
     });
   };
 
-  if (loading) {
-    return <div className={styles.loading}>Loading Question...</div>;
-  }
+  const revealAnswer = () => {
+    setShowCorrect(true);
+    setIsSubmitted(true);
+    if (!showExplanation) setShowExplanation(true);
+    setTimeout(reRenderMathJax, 0);
+    setTimeout(() => feedbackRef.current?.scrollIntoView({ behavior:'smooth', block:'center'}), 10);
+  };
 
+  /* ----------------------------- states/seo ----------------------------- */
+  if (loading) return <div className={styles.loading}>Loading question…</div>;
   if (!question) {
     return (
       <>
         <Helmet>
-          <title>Question Not Found | Maarula</title>
+          <title>Question Not Found | Mathem Solvex</title>
           <meta name="robots" content="noindex" />
         </Helmet>
-        <div>Question not found or could not be loaded.</div>
+        <div className={styles.loading}>Question not found or could not be loaded.</div>
       </>
     );
   }
 
-  const isCorrect = question.options?.[selectedOption]?.isCorrect;
+  const isCorrect = question.options?.[selectedOption]?.isCorrect || false;
 
-  // ---- SEO fields built from actual data (no backend changes) ----
-  const plainTextQuestion = stripHtmlAndMath(question.questionText || '');
+  const plainText = toPlainText(question.questionText || '');
+  const seoTitle =
+    plainText.slice(0, 100) + (plainText.length > 100 ? '…' : '');
   const pageUrl = `https://question.maarula.in/question/${question._id}`;
-  const pageTitle = `${plainTextQuestion.slice(0, 60)}... | Maarula`;
-  const rawDesc = `Practice problem: ${question.subject || ''} — ${question.exam || ''} ${question.year || ''}. ${plainTextQuestion}`;
-  const pageDescription = truncate(rawDesc, 160);
-  const imageUrl = question.questionImageURL || 'https://question.maarula.in/maarulalogo.png';
+  const pageTitle = `${seoTitle} | Mathem Solvex`;
+  const pageDescription = truncate(
+    `Practice problem: ${question.subject || ''} — ${question.exam || ''} ${question.year || ''}. ${plainText}`,
+    160
+  );
+  const ogImage = question.questionImageURL || 'https://question.maarula.in/maarulalogo.png';
 
   const publishedISO = question.createdAt ? new Date(question.createdAt).toISOString() : undefined;
-  const modifiedISO = question.updatedAt ? new Date(question.updatedAt).toISOString() : publishedISO;
+  const modifiedISO  = question.updatedAt ? new Date(question.updatedAt).toISOString() : publishedISO;
 
-  // QAPage structured data
+  // QAPage + optional video structured data
   const qaSchema = {
     '@context': 'https://schema.org',
     '@type': 'QAPage',
     mainEntity: {
       '@type': 'Question',
-      name: plainTextQuestion.slice(0, 180),
-      text: plainTextQuestion,
+      name: seoTitle,
+      text: plainText,
       answerCount: (question.options || []).length,
-      ...(question.options
-        ? (() => {
-            const accepted = question.options.find(o => o.isCorrect);
-            return accepted
-              ? { acceptedAnswer: { '@type': 'Answer', text: stripHtmlAndMath(accepted.text || '') } }
-              : {};
-          })()
-        : {}),
+      acceptedAnswer: (() => {
+        const a = (question.options || []).find(o => o.isCorrect);
+        if (!a) return undefined;
+        return { '@type': 'Answer', text: toPlainText(a.text || '') };
+      })(),
       dateCreated: publishedISO || modifiedISO,
       about: question.subject || undefined,
       eduQuestionType: question.difficulty || undefined,
@@ -154,17 +203,18 @@ const SingleQuestionPage = () => {
     }
   };
 
-  // Breadcrumbs
-  const breadcrumbs = {
+  const videoSchema = question.videoURL ? {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://question.maarula.in/' },
-      { '@type': 'ListItem', position: 2, name: 'Question Library', item: 'https://question.maarula.in/questions' },
-      { '@type': 'ListItem', position: 3, name: question.subject || 'Question', item: pageUrl }
-    ]
-  };
+    '@type': 'VideoObject',
+    name: `${seoTitle} – video solution`,
+    description: pageDescription,
+    uploadDate: publishedISO || modifiedISO,
+    contentUrl: question.videoURL,
+    embedUrl: question.videoURL,
+    thumbnailUrl: ogImage
+  } : null;
 
+  /* ----------------------------- render ----------------------------- */
   return (
     <>
       <Helmet>
@@ -172,25 +222,32 @@ const SingleQuestionPage = () => {
         <meta name="description" content={esc(pageDescription)} />
         <link rel="canonical" href={pageUrl} />
 
-        {/* Open Graph */}
+        {/* OG/Twitter */}
         <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Maarula" />
+        <meta property="og:site_name" content="Mathem Solvex" />
         <meta property="og:title" content={esc(pageTitle)} />
         <meta property="og:description" content={esc(pageDescription)} />
         <meta property="og:url" content={pageUrl} />
-        <meta property="og:image" content={imageUrl} />
+        <meta property="og:image" content={ogImage} />
         {publishedISO && <meta property="article:published_time" content={publishedISO} />}
         {modifiedISO && <meta property="article:modified_time" content={modifiedISO} />}
-
-        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={esc(pageTitle)} />
         <meta name="twitter:description" content={esc(pageDescription)} />
-        <meta name="twitter:image" content={imageUrl} />
+        <meta name="twitter:image" content={ogImage} />
 
-        {/* Structured Data */}
+        {/* Structured data */}
         <script type="application/ld+json">{JSON.stringify(qaSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbs)}</script>
+        {videoSchema && <script type="application/ld+json">{JSON.stringify(videoSchema)}</script>}
+        <script type="application/ld+json">{JSON.stringify({
+          '@context':'https://schema.org',
+          '@type':'BreadcrumbList',
+          itemListElement:[
+            { '@type':'ListItem', position:1, name:'Home', item:'https://question.maarula.in/' },
+            { '@type':'ListItem', position:2, name:'Question Library', item:'https://question.maarula.in/questions' },
+            { '@type':'ListItem', position:3, name: question.subject || 'Question', item: pageUrl }
+          ]
+        })}</script>
       </Helmet>
 
       <div className={styles.pageLayout}>
@@ -199,22 +256,30 @@ const SingleQuestionPage = () => {
             <Link to="/questions">Question Library</Link> &rsaquo; {question.subject}
           </div>
 
+          <div className={styles.tipBar}>
+            <strong>Tip:</strong>
+            <span>Press <span className={styles.kbd}>A–D</span> or <span className={styles.kbd}>1–4</span> to answer.</span>
+            <span><span className={styles.kbd}>E</span> = explanation</span>
+            <span><span className={styles.kbd}>V</span> = video</span>
+            <span><span className={styles.kbd}>S</span> = show answer</span>
+          </div>
+
           <div className={styles.questionCard}>
             <div className={styles.questionHeader}>
-              <span>{question.exam} | {question.subject} | {question.year}</span>
+              {question.exam} | {question.subject} | {question.year}
             </div>
 
-            {/* Clear H1 for SEO */}
-            <h1 className={styles.questionTitle}>
-              {plainTextQuestion.slice(0, 100)}{plainTextQuestion.length > 100 ? '…' : ''}
-            </h1>
+            {/* SEO/A11y H1 hidden visually */}
+            <h1 className={styles.srOnly}>{seoTitle}</h1>
 
-            <MathPreview latexString={question.questionText} className={styles.questionBody} />
+            <div className={styles.questionBody}>
+              <MathPreview latexString={question.questionText} />
+            </div>
 
             {question.questionImageURL && (
               <img
                 src={question.questionImageURL}
-                alt="Question"
+                alt={`${question.subject} question image`}
                 className={styles.mainImage}
                 loading="lazy"
                 decoding="async"
@@ -222,30 +287,30 @@ const SingleQuestionPage = () => {
             )}
 
             <h3 className={styles.optionsHeader}>Choose the correct answer:</h3>
-            <div className={styles.optionsGrid}>
-              {question.options.map((option, index) => {
-                let buttonClass = styles.optionButton;
-                if (isSubmitted) {
-                  if (option.isCorrect) buttonClass += ` ${styles.correct}`;
-                  else if (index === selectedOption) buttonClass += ` ${styles.incorrect}`;
-                } else if (index === selectedOption) {
-                  buttonClass += ` ${styles.selected}`;
-                }
 
+            <div className={styles.optionsGrid}>
+              {question.options.map((opt, idx) => {
+                let cls = styles.optionButton;
+                if (isSubmitted) {
+                  if (opt.isCorrect) cls += ` ${styles.correct}`;
+                  else if (idx === selectedOption && !opt.isCorrect) cls += ` ${styles.incorrect}`;
+                } else if (idx === selectedOption) {
+                  cls += ` ${styles.selected}`;
+                }
                 return (
                   <button
-                    key={index}
-                    className={buttonClass}
-                    onClick={() => handleOptionSelect(index)}
+                    key={idx}
+                    className={cls}
+                    onClick={() => handleOptionSelect(idx)}
                     disabled={isSubmitted}
-                    aria-pressed={selectedOption === index}
+                    aria-pressed={selectedOption === idx}
                   >
-                    <span className={styles.optionLetter}>{String.fromCharCode(65 + index)}</span>
-                    <MathPreview latexString={option.text || ''} className={styles.optionContent} />
-                    {option.imageURL && (
+                    <span className={styles.optionLetter}>{String.fromCharCode(65 + idx)}</span>
+                    <MathPreview latexString={opt.text || ''} className={styles.optionContent} />
+                    {opt.imageURL && (
                       <img
-                        src={option.imageURL}
-                        alt={`Option ${index + 1}`}
+                        src={opt.imageURL}
+                        alt={`Option ${idx + 1}`}
                         className={styles.optionImage}
                         loading="lazy"
                         decoding="async"
@@ -256,41 +321,52 @@ const SingleQuestionPage = () => {
               })}
             </div>
 
-            {!isSubmitted && (
-              <div className={styles.submitContainer}>
-                <button onClick={handleSubmit} className={styles.submitBtn} disabled={selectedOption === null}>
-                  Choose an Answer to solution
-                </button>
-              </div>
-            )}
+            {/* Actions */}
+            <div className={styles.submitContainer}>
+              {!isSubmitted && (
+                <>
+                  <button className={styles.primaryBtn} onClick={submitIfChosen} disabled={selectedOption === null}>
+                    Submit
+                  </button>
+                  <button className={styles.ghostBtn} onClick={revealAnswer}>
+                    Show Answer
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
+          {/* Feedback + controls */}
           {isSubmitted && (
-            <div ref={feedbackRef} className={styles.feedbackCard}>
-              <p className={isCorrect ? styles.correctText : styles.incorrectText}>
-                {isCorrect ? '✅ Correct Answer! Well done.' : "Oops! That's not correct. Please review the explanation for better understanding."}
+            <div ref={feedbackRef} className={styles.feedbackCard} aria-live="polite">
+              <p className={isCorrect || showCorrect ? styles.correctText : styles.incorrectText}>
+                {showCorrect
+                  ? '✅ Answer shown.'
+                  : isCorrect
+                  ? '✅ Correct! Well done.'
+                  : '❌ Not correct. Review the explanation below.'}
               </p>
               <div className={styles.buttonGroup}>
-                <button onClick={handleToggleExplanation} className={styles.explanationBtn}>
-                  {showExplanation ? 'Hide' : 'Show'} Detailed Explanation
+                <button className={styles.primaryBtn} onClick={toggleExplanation}>
+                  {showExplanation ? 'Hide Explanation' : 'Show Explanation'}
                 </button>
-
                 {question.videoURL && (
-                  <button onClick={() => setShowVideo(!showVideo)} className={styles.explanationBtn}>
-                    {showVideo ? 'Hide' : 'Show'} Video Solution
+                  <button className={styles.ghostBtn} onClick={() => setShowVideo(v => !v)}>
+                    {showVideo ? 'Hide Video' : 'Watch Video Solution'}
                   </button>
                 )}
               </div>
             </div>
           )}
 
+          {/* Explanation */}
           {showExplanation && (
-            <div ref={explanationRef} className={styles.explanationBox}>
+            <div className={styles.explanationBox}>
               <h3>Explanation</h3>
               {question.explanationText ? (
                 <MathPreview latexString={question.explanationText} />
               ) : (
-                <p>No text explanation available.</p>
+                <p className={styles.incorrectText}>No text explanation available.</p>
               )}
               {question.explanationImageURL && (
                 <img
@@ -304,6 +380,7 @@ const SingleQuestionPage = () => {
             </div>
           )}
 
+          {/* Video */}
           {showVideo && question.videoURL && (
             <div className={styles.explanationBox}>
               <h3>Video Explanation</h3>
@@ -324,14 +401,15 @@ const SingleQuestionPage = () => {
           </div>
         </div>
 
+        {/* Sidebar */}
         <aside className={styles.sidebar}>
-          {relatedQuestions.length > 0 && (
+          {related.length > 0 && (
             <div className={styles.sidebarBlock}>
               <h3>Related Questions</h3>
               <div className={styles.relatedList}>
-                {relatedQuestions.map(q => (
-                  <Link to={`/question/${q._id}`} key={q._id} className={styles.relatedItem}>
-                    <MathPreview latexString={(q.questionText || '').substring(0, 80) + '...'} />
+                {related.map(r => (
+                  <Link to={`/question/${r._id}`} key={r._id} className={styles.relatedItem}>
+                    <MathPreview latexString={(r.questionText || '').slice(0, 120) + '…'} />
                     <span>&rsaquo;</span>
                   </Link>
                 ))}
@@ -342,6 +420,4 @@ const SingleQuestionPage = () => {
       </div>
     </>
   );
-};
-
-export default SingleQuestionPage;
+}

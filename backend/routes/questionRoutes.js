@@ -35,12 +35,12 @@ router.get('/public', getPublicQuestions);
 
 // GET /api/questions/public/:id - Get a single question for students (public view)
 router.get('/public/:id', getPublicQuestionById); 
-
 // GET /api/questions/filters - Gets all unique filter options (publicly accessible)
 router.get('/filters', getFilterOptions);
 
 // GET /api/questions/:id/related - Gets related questions based on topic and exam (publicly accessible)
-router.get('/:id/related', getRelatedQuestions);
+router.get('/public/:id/related', getRelatedQuestions);
+
 
 // --- Admin/Protected Routes (require 'protect' middleware) ---
 
