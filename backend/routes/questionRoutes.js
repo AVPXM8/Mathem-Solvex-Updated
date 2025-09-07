@@ -9,7 +9,7 @@ const {
     getQuestionStats,
     getFilterOptions,
     getPublicQuestions, 
-    getPublicQuestionById, // NEW: Added this for public single question view
+    getPublicQuestionById, 
     getRelatedQuestions
 } = require('../controllers/questionController');
 

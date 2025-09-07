@@ -95,26 +95,44 @@ exports.getQuestions = async (req, res) => {
     }
 };
 
-/**
- * GET /api/questions/public (Public)
- * Public endpoint to fetch questions for students (with pagination, filtering, limited fields)
- * Assumes `Question.paginate` is available from mongoose-paginate-v2.
- */
 exports.getPublicQuestions = async (req, res) => {
     try {
-        const { exam, subject, topic, page = 1, limit = 10, sort = '-createdAt' } = req.query;
-        const query = {};
+        const page = parseInt(req.query.page || 1);
+        const limit = parseInt(req.query.limit || 10); // This will now correctly be overridden by frontend
 
-        if (exam) query.exam = exam;
-        if (subject) query.subject = { $regex: subject, $options: 'i' };
-        if (topic) query.topic = { $regex: topic, $options: 'i' };
+        const query = {};
+        // Add your filter logic back in here, based on req.query
+        // Example:
+        if (req.query.exam) query.exam = req.query.exam;
+        if (req.query.subject) query.subject = { $regex: req.query.subject, $options: 'i' };
+        if (req.query.search) {
+            query.$or = [
+                { questionText: { $regex: req.query.search, $options: 'i' } },
+                { 'options.text': { $regex: req.query.search, $options: 'i' } },
+                // Add questionNumber search if applicable
+                ...(!isNaN(parseInt(req.query.search)) && parseInt(req.query.search).toString() === req.query.search
+                    ? [{ questionNumber: parseInt(req.query.search) }]
+                    : [])
+            ];
+        }
+
+
+        // Use a robust sort, defaulting to latest by _id or createdAt
+        let sortOptions = { _id: -1 }; // Default for public API
+        // If you want client-side sort control (e.g., /questions/public?sort=questionNumber)
+        if (req.query.sort) {
+            if (req.query.sort === 'questionNumber') sortOptions = { questionNumber: 1, _id: 1 };
+            else if (req.query.sort === '-questionNumber') sortOptions = { questionNumber: -1, _id: -1 };
+            else if (req.query.sort === 'createdAt') sortOptions = { createdAt: 1, _id: 1 };
+            else if (req.query.sort === '-createdAt') sortOptions = { createdAt: -1, _id: -1 };
+        }
+
 
         const options = {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            sort,
-            // Exclude sensitive/large fields and correctOption for public view
-            select: '-__v -createdAt -updatedAt -explanationText -explanationImageURL -videoURL -correctOption',
+            page: page,
+            limit: limit,
+            sort: sortOptions,
+            select: '-__v -updatedAt -explanationText -explanationImageURL -videoURL -correctOption',
             lean: true,
         };
 
@@ -132,9 +150,10 @@ exports.getPublicQuestions = async (req, res) => {
             nextPage: result.nextPage,
             prevPage: result.prevPage,
         });
+
     } catch (error) {
         console.error('Error fetching public questions:', error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 

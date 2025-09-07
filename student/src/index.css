@@ -1,18 +1,25 @@
-/* src/index.css - FINAL ENHANCED VERSION */
-
 /* 1. Import the new Poppins font from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 /* 2. Define a more refined color palette */
 :root {
-    --primary-blue: #0057FF;
-    --primary-blue-hover: #0048d6;
-    --dark-navy: #0f172a;
-    --slate-gray: #64748b;
-    --light-gray: #f8fafc; /* Lighter gray for backgrounds */
-    --background-color: #f1f5f9;
-    --white: #FFFFFF;
-    --border-color: #e2e8f0;
+  --primary-color: #4f46e5;
+  --primary-color-dark: #4338ca;
+  --primary-color-light: #eef2ff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #ffffff;
+  --background-color: #f8fafc;
+  --surface-color: #ffffff; /* Card and sidebar background */
+  --border-color: #e2e8f0;
+  --border-color-focus: #a5b4fc;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-radius-sm: 6px;
+  --border-radius-md: 12px;
+  --border-radius-pill: 9999px;
+  --transition-speed: 0.2s;
 }
 
 /* 3. Set up a better global font and reset */
@@ -30,3 +37,35 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+
+
+/* Dark mode example (optional) */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #66a3ff;
+    --primary-color-dark: #337ab7;
+    --primary-color-light: #003d7a;
+
+    --accent-color-light: #263238;
+    --accent-color-dark: #4dd0e1;
+
+    --text-color-primary: #f0f0f0;
+    --text-color-secondary: #bdbdbd;
+    --text-color-light: #888;
+    --light-text-color: #333;
+
+    --background-color: #1a202c;
+    --card-background-color: #2d3748;
+    --secondary-background-color: #4a5568;
+    --hover-background-color: #6a778e;
+
+    --border-color: #4a5568;
+    --shadow-small: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-medium: 0 2px 5px rgba(0,0,0,0.35);
+
+    --skeleton-color: #4a5568;
+  }
+}
+*/

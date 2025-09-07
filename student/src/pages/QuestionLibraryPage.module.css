@@ -1,277 +1,626 @@
-.pageHeader {
-  text-align: center;
-  padding: 40px 20px;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-}
-.pageHeader h1 { font-size: 2.5rem; color: #1e293b; margin-bottom: 10px; }
-.pageHeader p { font-size: 1.1rem; color: #64748b; max-width: 600px; margin: 0 auto; }
+/* FINAL & COMPLETE - September 7, 2025 */
 
+/* --- 1. THEME & GLOBAL VARIABLES --- */
+:root {
+  --primary-color: #4f46e5;
+  --primary-color-dark: #4338ca;
+  --primary-color-light: #eef2ff;
+  --accent-color-yellow: #FBBF24; /* New yellow for buttons */
+  --accent-color-yellow-dark: #F59E0B; /* Darker yellow for hover */
+  --accent-color-yellow-light: #FEF3C7;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #ffffff;
+  --background-color: #f8fafc;
+  --surface-color: #ffffff;
+  --border-color: #e2e8f0;
+  --border-color-focus: #a5b4fc;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-radius-sm: 6px;
+  --border-radius-md: 12px;
+  --border-radius-pill: 9999px;
+  --transition-speed: 0.2s;
+}
+
+/* --- 2. LAYOUT & HERO SECTION --- */
+.heroSection {
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 60px 20px;
+  text-align: center;
+}
+.heroSection h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 15px;
+}
+.heroSection .subheading {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 0 auto 30px;
+  line-height: 1.7;
+}
+
+.mainContentArea {
+  background-color: var(--background-color);
+  padding: 1px 0 40px;
+}
 .container {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 40px;
-  align-items: flex-start;
 }
 
-/* --- NEW & IMPROVED FILTER STYLES --- */
-.filterSidebar { position: sticky; top: 100px; background-color: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; }
-.searchForm { position: relative; margin-bottom: 25px; }
-.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.searchInput { width: 100%; padding: 10px 15px 10px 40px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 1rem; }
-.filterGroup { margin-bottom: 25px; }
-.filterGroup h4 { margin: 0 0 15px 0; font-size: 1rem; color: #334155; }
+/* --- 3. INTRO CONTENT (NAV, FAQ, BENEFITS) --- */
+.heroSection h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 40px 0 20px;
+}
+.benefitList {
+  display: inline-block;
+  text-align: left;
+  margin: 0 auto;
+  max-width: 550px;
+  list-style: none;
+  padding-left: 0;
+}
+.benefitList li {
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+.benefitList li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
 
+.hubNav {
+  margin-top: 40px;
+}
+.hubNav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.hubNav a {
+  display: inline-block;
+  text-decoration: none;
+  background-color: var(--primary-color-light);
+  color: var(--primary-color-dark);
+  padding: 8px 18px;
+  border-radius: var(--border-radius-pill);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-speed) ease;
+}
+.hubNav a:hover {
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  border-color: var(--primary-color-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.faq {
+  margin-top: 50px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border-color);
+}
+.faq h2 {
+  font-size: 1.6rem;
+  margin-bottom: 25px;
+  text-align: center;
+  color: var(--text-primary);
+}
+.faq details {
+  margin-bottom: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--surface-color);
+}
+.faq summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 15px 20px;
+}
+.faq summary::after {
+  content: '▼';
+  font-size: 0.8em;
+  color: var(--primary-color);
+  transform-origin: center;
+  transition: transform var(--transition-speed) ease;
+}
+.faq details[open] > summary::after {
+  transform: rotate(180deg);
+}
+.faq p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding: 0 20px 15px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 10px;
+}
+
+/* --- 4. FILTER CONTROLS & PANEL --- */
+.listControlsContainer {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 20px;
+  margin-bottom: 30px;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+.listHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+}
+.filterToggleButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 18px;
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+.filterToggleButton:hover {
+  border-color: var(--border-color-focus);
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+}
+.filterPanel {
+  position: absolute;
+  top: 100%;
+  left: -1px;
+  right: -1px;
+  z-index: 1002;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  padding: 25px;
+  margin-top: 0;
+  box-shadow: var(--shadow-lg);
+  transform-origin: top center;
+  transition: transform 0.2s ease, opacity 0.2s ease, visibility 0s 0.2s;
+  opacity: 0;
+  transform: scaleY(0.98) translateY(-10px);
+  visibility: hidden;
+  will-change: transform, opacity;
+}
+.filterPanel.open {
+  opacity: 1;
+  transform: scaleY(1) translateY(0);
+  visibility: visible;
+  transition: transform 0.2s ease, opacity 0.2s ease, visibility 0s 0s;
+}
+.activeFiltersDisplay {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+.activeFilterTag {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--accent-color-yellow-light);
+  color: var(--accent-color-yellow-dark);
+  padding: 6px 12px;
+  border-radius: var(--border-radius-pill);
+  font-size: 0.9rem;
+  font-weight: 600; /* Bolder for clarity */
+}
+.activeFilterTag strong {
+  margin-left: 6px;
+  font-weight: 700;
+}
+.clearFilterTagButton {
+  background: none;
+  border: none;
+  color: var(--accent-color-yellow-dark);
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 0;
+  display: flex;
+  opacity: 0.7;
+  transition: opacity var(--transition-speed) ease;
+}
+.clearFilterTagButton:hover {
+  opacity: 1;
+}
+.clearAllActiveTagsButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: auto;
+}
+
+/* --- 5. FILTER FORM CONTENT (Inside Panel/Sidebar) --- */
+.filterContent {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+}
+.searchForm {
+  position: relative;
+  align-items: center;  
+  display: flex;
+  gap: 10px;
+}
+.searchInput {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  transition: all var(--transition-speed) ease;
+}
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-color-yellow);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
+}
+.searchIcon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+.searchForm .searchInput,
+.searchForm .searchSubmitButton {
+  height: 45px;                     
+}
+.searchSubmitButton {
+  padding: 8px 16px; /* Smaller padding */
+  font-weight: 600;
+  font-size: 0.9rem; /* Smaller font */
+  background-color: var(--accent-color-yellow);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease;
+}
+.searchSubmitButton:hover {
+  background-color: var(--accent-color-yellow-dark);
+}
+.searchSubmitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.filterGroup h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
 .filterOptionsContainer {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
-
-.filterGroup button {
-  /* No longer full width, text is centered */
+.filterLink {
   padding: 8px 16px;
-  border-radius: 20px; /* Makes it a pill */
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
+  border-radius: var(--border-radius-pill);
+  border: 1px solid var(--border-color);
+  background-color: var(--background-color);
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  text-decoration: none;
+  transition: all var(--transition-speed) ease;
+}
+.filterLink:hover {
+  background-color: var(--accent-color-yellow-light);
+  border-color: var(--accent-color-yellow);
+  color: var(--accent-color-yellow-dark);
+}
+.filterLink.activeFilter {
+  background-color: var(--accent-color-yellow);
+  color: var(--text-primary);
+  border-color: var(--accent-color-yellow-dark);
+  font-weight: 600;
+}
+.filterActions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+.applyFiltersButton {
+  flex: 1;
+  padding: 12px 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  background-color: var(--accent-color-yellow); /* Yellow color */
+  color: var(--text-primary); /* Dark text for readability */
+  border: none;
+}
+.applyFiltersButton:hover {
+  background-color: var(--accent-color-yellow-dark);
+}
+.clearAllFiltersButton {
+  flex: 1;
+  padding: 12px 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+.clearAllFiltersButton:hover {
+  background-color: var(--background-color);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
-.filterGroup button:hover { background-color: #eef2ff; border-color: #a5b4fc; }
-.filterGroup button.activeFilter { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-.clearButton { width: 100%; margin-top: 15px; padding: 10px 15px; border-radius: 6px; border: none; background-color: #f1f5f9; color: #475569; cursor: pointer; font-weight: 600; }
-.mobileFilterToggle { display: none; }
-.closeFilterButton { display: none; }
-
-/* --- Question List --- */
-.questionList {
-  max-width: 800px;
-  min-width: 0; /* THIS IS THE CRITICAL FIX */
-}
-.listHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: #64748b; font-weight: 500; }
-
+/* --- 6. QUESTION LIST & CARDS --- */
 .questionCard {
-  display: flex; /* Changed to flex for better internal alignment */
-  flex-direction: column; /* Stack content vertically */
+  display: block;
   text-decoration: none;
   color: inherit;
-  background-color: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
   padding: 25px;
   margin-bottom: 20px;
-  transition: all 0.2s ease-in-out;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-speed) ease-in-out;
 }
 .questionCard:hover {
-  border-color: #4f46e5;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.07);
-  transform: translateY(-2px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
 }
-
-.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-.tag { background-color: #eef2ff; color: #4338ca; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
-.options { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 20px 0; }
-.viewLink { display: inline-block; margin-top: auto; /* Pushes to bottom in flex container */ color: #4f46e5; font-weight: 600; }
-.noResults { text-align: center; padding: 50px; font-size: 1.1rem; color: #64748b; }
-
-.questionText,
-.option {
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f8fafc;
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
 }
-.questionText::-webkit-scrollbar,
-.option::-webkit-scrollbar { height: 6px; }
-.questionText::-webkit-scrollbar-thumb,
-.option::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-.questionText { font-size: 1.1rem; line-height: 1.7; margin-bottom: 20px; }
-.option { display: flex; gap: 8px; align-items: flex-start; }
-
-/* --- THIS IS THE ROBUST FIX FOR MOBILE OVERFLOW --- */
-.questionText,
-.option {
-  overflow-wrap: break-word; /* Standard property to break long words/strings */
-  word-break: break-all;     /* More aggressive breaking for unbreakable strings */
-  overflow-x: auto;          /* Fallback: add a scrollbar if content is still too wide */
-
-  padding-bottom: 8px; /* Adds space for the scrollbar if it appears */
-  scrollbar-width: thin; /* For Firefox */
-  scrollbar-color: #cbd5e1 #f8fafc; /* For Firefox */
+.tag {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color-dark);
+  padding: 5px 12px;
+  border-radius: var(--border-radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
-.questionText::-webkit-scrollbar,
-.option::-webkit-scrollbar {
-  height: 6px;
-}
-.questionText::-webkit-scrollbar-thumb,
-.option::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
-  border-radius: 10px;
-}
-/* --- END OF FIX --- */
-
 .questionText {
   font-size: 1.1rem;
   line-height: 1.7;
+  color: var(--text-primary);
   margin-bottom: 20px;
+  overflow-x: auto;
+  white-space: normal;
+  padding-bottom: 15px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
 }
-.options {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  margin: 20px 0;
+.questionText::-webkit-scrollbar { height: 8px; }
+.questionText::-webkit-scrollbar-track { background: transparent; }
+.questionText::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 10px;
+  border: 3px solid var(--surface-color);
 }
-.option {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-}
-.viewLink {
-  display: inline-block;
-  margin-top: 15px;
-  color: #4f46e5;
-  font-weight: 600;
-}
-.noResults {
-  text-align: center;
-  padding: 50px;
-  font-size: 1.1rem;
-  color: #64748b;
-}
-
-/* --- Mobile Responsive --- */
-@media (max-width: 992px) {
-  .container {
-    grid-template-columns: 1fr;
-  }
-  .questionList {
-    max-width: 100%;
-  }
-  .filterSidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 300px;
-    height: 100%;
-    z-index: 1002;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    overflow-y: auto;
-    box-shadow: 0 0 40px rgba(0,0,0,0.2);
-    border: none;
-  }
-  .filterSidebar.open {
-    transform: translateX(0);
-  }
-  .mobileFilterToggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background-color: white;
-    padding: 8px 15px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .closeFilterButton {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #475569;
-    padding: 0;
-    margin-bottom: 20px;
-    cursor: pointer;
-  }
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 1001;
-  }
-}
-
-@media (min-width: 768px) {
-  .options {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-/* --- Global containment: never allow page-wide horizontal scrolling --- */
-html, body {
-  overflow-x: hidden;
-}
-
-/* --- MathJax: prevent overflow and allow wrapping on mobile --- */
-.mjx-container {
-  max-width: 100% !important;       /* never overflow the card */
-  overflow-x: auto;                  /* scroll only the formula if needed */
-  -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
-}
-.mjx-container[display="true"] {
-  display: block;                    /* ensure block context for display equations */
-}
-.mjx-chtml {                         /* MathJax HTML output wrapper */
-  white-space: normal !important;    /* allow line breaks */
-  word-break: normal !important;
-  overflow-wrap: anywhere !important;/* gently break long pieces if needed */
-}
-
-/* --- Images/SVG inside question & options: fully responsive --- */
 .questionText img,
-.option img,
-.questionText svg,
-.option svg {
+.questionText table {
   max-width: 100%;
   height: auto;
   display: block;
 }
-
-/* --- Safer mobile wrapping for long tokens (IDs, LaTeX text, etc.) --- */
-.questionText,
-.option {
-  /* prefer natural breaks first */
-  word-break: normal;               /* overrides your earlier break-all */
-  overflow-wrap: anywhere;          /* lets the browser break long tokens only when necessary */
-  /* keep your scrollbar styling if you want local horizontal scroll: */
-  -webkit-overflow-scrolling: touch;
+.viewLink {
+  display: inline-block;
+  margin-top: 15px;
+  color: var(--primary-color);
+  font-weight: 600;
+  transition: transform var(--transition-speed) ease;
+}
+.questionCard:hover .viewLink {
+  transform: translateX(4px);
 }
 
-/* --- Avoid CLS: reserve space for tags & header row --- */
-.tags { min-height: 28px; }         /* reserve at least one line for tags */
-.listHeader { min-height: 32px; }   /* keeps header height stable during loading */
+/* --- 7. PAGINATION & STATES --- */
+.paginationControls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 50px;
+}
+.paginationControls span {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--primary-color-light);
+}
+.paginationButton {
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-speed) ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.paginationButton:hover:not(:disabled) {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color-dark);
+  color: var(--text-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.paginationButton:disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  opacity: 1;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.noResults {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+}
+.noResults h3 { font-size: 1.5rem; margin-bottom: 10px; }
+.noResults p { color: var(--text-secondary); margin-bottom: 25px; }
+.spinner { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.skeletonContainer { display: grid; gap: 20px; }
+.questionCardSkeleton {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 25px;
+  min-height: 180px;
+}
+.skeletonLine {
+  background-color: #e2e8f0;
+  height: 16px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-/* --- Touch-friendly buttons --- */
-.filterGroup button {
-  min-height: 40px;                 /* better tap targets on mobile */
+/* --- 8. MOBILE & RESPONSIVE --- */
+.filterSidebar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 100%;
+  z-index: 1002;
+  background-color: var(--surface-color);
+  padding: 25px;
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+.filterSidebar.open { transform: translateX(0); }
+.closeFilterButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 0;
+  margin-bottom: 25px;
+  cursor: pointer;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1001;
+  backdrop-filter: blur(2px);
 }
 
-/* --- Mobile drawer: prefers-reduced-motion friendly --- */
-@media (prefers-reduced-motion: reduce) {
-  .filterSidebar {
-    transition: none !important;
+@media (max-width: 768px) {
+  .heroSection, .benefitList, .faq h2 { text-align: left; }
+  .hubNav ul { justify-content: flex-start; }
+  .heroSection h1 { font-size: 2.2rem; }
+  .filterPanel { display: none; }
+  .filterSidebar { display: block; }
+  .filterActions { flex-direction: column; }
+}
+
+@media (min-width: 768px) {
+  .filterContent { 
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
   }
 }
 
-/* --- Optional: keep the card content from growing too tall on very small screens --- */
-/* show ~10 lines then hint there's more; user goes into the question page for full view */
-@media (max-width: 420px) {
-  .questionText {
-    display: -webkit-box;
-    -webkit-line-clamp: 10;         /* clamp to ~10 lines */
-    line-clamp: 10;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+/* --- 9. ACCESSIBILITY & POLISH --- */
+.filterToggleButton:focus-visible,
+.filterLink:focus-visible,
+.paginationButton:focus-visible,
+.searchSubmitButton:focus-visible,
+.applyFiltersButton:focus-visible,
+.clearAllFiltersButton:focus-visible,
+.clearFilterTagButton:focus-visible,
+.closeFilterButton:focus-visible,
+.hubNav a:focus-visible,
+.viewLink:focus-visible,
+.questionCard:focus-visible {
+  outline: 3px solid var(--primary-color-light);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--border-color-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { 
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
