@@ -1,37 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/question/:id",
-      "destination": "/questions/:id",
-      "permanent": true
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/robots.txt",
-      "destination": "https://mathemsolvex.onrender.com/robots.txt"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "https://mathemsolvex.onrender.com/sitemap.xml"
-    },
+    { "source": "/robots.txt",  "destination": "https://mathemsolvex.onrender.com/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "https://mathemsolvex.onrender.com/sitemap.xml" },
 
-   
-    {
-      "source": "/questions/:id",
-      "destination": "/api/og-questions?id=:id"
-    },
-    {
-      "source": "/articles/:slug",
-      "destination": "/api/og-articles?slug=:slug"
-    },
+    { "source": "/questions/:id", "destination": "/index.html" },
+    { "source": "/question/:id",  "destination": "/index.html" }, 
+    { "source": "/articles/:slug", "destination": "/index.html" },
 
-   
-    {
-      "source": "/((?!api|.*\\..*).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/((?!api|.*\\..*).*)", "destination": "/index.html" }
   ]
 }
