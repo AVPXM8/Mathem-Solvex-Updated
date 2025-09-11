@@ -1,241 +1,482 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import api from '../api';
-import useMathJax from '../hooks/useMathJax';
-import { Helmet } from 'react-helmet-async'; 
-import ReactPlayer from 'react-player/youtube';
-import styles from './SinglePostPage.module.css';
-import { FaWhatsapp, FaTelegram, FaFacebook, FaLinkedin, FaXTwitter } from 'react-icons/fa6'; 
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import ReactPlayer from "react-player/youtube";
 
-// ---- helpers: keep SEO text clean & safe ----
-const stripHtml = (s = '') => s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-const truncate = (s = '', n = 160) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
-const esc = (s = '') =>
-  s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+import api from "../api";
+import useMathJax from "../hooks/useMathJax";
+import styles from "./SinglePostPage.module.css";
 
-const SinglePostPage = () => {
+import {
+  FaWhatsapp,
+  FaTelegram,
+  FaFacebook,
+  FaLinkedin,
+  FaXTwitter,
+  FaLink,
+} from "react-icons/fa6";
+
+/* ---------- small helpers (safe & deterministic) ---------- */
+const stripHtml = (s = "") =>
+  s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+const truncate = (s = "", n = 160) =>
+  s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s;
+
+const esc = (s = "") =>
+  s.replace(/[&<>"']/g, (c) =>
+    ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[c])
+  );
+
+const baseSlug = (s = "") =>
+  s
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 80);
+
+/** Slugify with guaranteed non-empty + uniqueness */
+function slugifyUnique(text, used) {
+  const raw = (text || "").trim();
+  if (!raw) return null;
+  const base = baseSlug(raw) || "section";
+  const seen = used.get(base) || 0;
+  used.set(base, seen + 1);
+  return seen > 0 ? `${base}-${seen + 1}` : base;
+}
+
+/* ===========================================================
+   Component
+   =========================================================== */
+export default function SinglePostPage() {
   const { slug } = useParams();
+
+  // Hooks in fixed order
   const [post, setPost] = useState(null);
   const [recentPosts, setRecentPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toc, setToc] = useState([]);
+  const contentRef = useRef(null);
 
+  // Always fire MathJax on content change
   useMathJax([post, recentPosts]);
 
+  // Reading time (before any early returns)
+  const readingTime = useMemo(() => {
+    const words = stripHtml(post?.content || "")
+      .split(/\s+/)
+      .filter(Boolean).length;
+    return Math.max(1, Math.round((words || 200) / 200)); // ~200 wpm
+  }, [post?.content]);
+
+  // Fetch data for the page
   useEffect(() => {
-    const fetchPostData = async () => {
+    let ok = true;
+    (async () => {
       try {
         setLoading(true);
-        window.scrollTo(0, 0);
+        // Scroll to top on navigation
+        window.scrollTo({ top: 0, behavior: "instant" });
 
-        // Your existing API contracts remain unchanged:
-        const postResponse = await api.get(`/posts/${slug}`);
-        setPost(postResponse.data);
+        const pRes = await api.get(`/posts/${slug}`);
+        const rRes = await api.get(`/posts?limit=6`);
 
-        const recentResponse = await api.get(`/posts?limit=4`);
-        const postsArray = Array.isArray(recentResponse.data)
-          ? recentResponse.data
-          : recentResponse.data.posts;
+        if (!ok) return;
 
-        if (postsArray) {
-          setRecentPosts(postsArray.filter(p => p.slug !== slug).slice(0, 3));
-        }
-      } catch (error) {
-        console.error('Failed to fetch post data', error);
+        setPost(pRes.data);
+
+        const arr = Array.isArray(rRes.data)
+          ? rRes.data
+          : rRes.data?.posts || [];
+        setRecentPosts(arr.filter((p) => p.slug !== slug).slice(0, 5));
+      } catch (e) {
+        console.error("Failed to fetch post data", e);
       } finally {
-        setLoading(false);
+        ok && setLoading(false);
       }
+    })();
+    return () => {
+      ok = false;
     };
-    fetchPostData();
   }, [slug]);
 
-  if (loading) return <div className={styles.loading}>Loading Article...</div>;
+  // Enhance rendered HTML & build TOC safely
+  useEffect(() => {
+    const root = contentRef.current;
+    if (!root) return;
+
+    // External links → new tab
+    root.querySelectorAll("a[href]").forEach((a) => {
+      const href = a.getAttribute("href");
+      if (!href) return;
+      try {
+        const u = new URL(href, window.location.origin);
+        if (u.origin !== window.location.origin) {
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+        }
+      } catch {
+        // ignore relative or malformed
+      }
+    });
+
+    // Images → responsive figure with optional caption
+    root.querySelectorAll("img").forEach((img) => {
+      img.loading = img.loading || "lazy";
+      img.decoding = img.decoding || "async";
+      img.classList.add(styles.responsiveImage);
+
+      if (!img.closest("figure")) {
+        const fig = document.createElement("figure");
+        fig.className = styles.figure;
+        img.replaceWith(fig);
+        fig.appendChild(img);
+        if (img.alt) {
+          const cap = document.createElement("figcaption");
+          cap.className = styles.figcaption;
+          cap.textContent = img.alt;
+          fig.appendChild(cap);
+        }
+      }
+    });
+
+    // Tables → horizontal scroll on mobile
+    root.querySelectorAll("table").forEach((tbl) => {
+      if (!tbl.closest(`.${styles.tableWrap}`)) {
+        const wrap = document.createElement("div");
+        wrap.className = styles.tableWrap;
+        tbl.parentNode.insertBefore(wrap, tbl);
+        wrap.appendChild(tbl);
+      }
+      tbl.setAttribute("role", "table");
+    });
+
+    // Iframes → 16:9 responsive
+    root.querySelectorAll("iframe").forEach((ifr) => {
+      if (!ifr.closest(`.${styles.embed}`)) {
+        const wrap = document.createElement("div");
+        wrap.className = styles.embed;
+        ifr.parentNode.insertBefore(wrap, ifr);
+        wrap.appendChild(ifr);
+      }
+      ifr.setAttribute("loading", "lazy");
+    });
+
+    // Build TOC from h2/h3 — unique, non-empty IDs only
+    const used = new Map();
+    const headers = Array.from(root.querySelectorAll("h2, h3"));
+    const list = [];
+    headers.forEach((h) => {
+      const text = (h.textContent || "").trim();
+      if (!text) return; // skip empty headings
+      let id = (h.id || "").trim();
+      if (!id) {
+        id = slugifyUnique(text, used);
+        if (!id) return; // safety
+        h.id = id;
+      }
+      list.push({ id, text, level: h.tagName === "H2" ? 2 : 3 });
+    });
+
+    setToc(list);
+  }, [post]);
+
+  if (loading) return <div className={styles.loading}>Loading article…</div>;
   if (!post) return <div className={styles.loading}>Article not found.</div>;
 
-  // ---- SEO fields (safe, trimmed, consistent) ----
+  /* ---------- SEO ---------- */
   const pageUrl = `https://question.maarula.in/articles/${post.slug}`;
-  const rawDesc = post.metaDescription || stripHtml(post.content || '');
+  const rawDesc = post.metaDescription || stripHtml(post.content || "");
   const pageDescription = truncate(rawDesc, 160);
   const pageTitle = `${post.title} | Maarula Classes`;
   const imageUrl =
     post.featuredImage ||
-    'https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png';
+    "https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png";
 
-  const publishedISO = post.createdAt ? new Date(post.createdAt).toISOString() : undefined;
-  const modifiedISO = post.updatedAt ? new Date(post.updatedAt).toISOString() : publishedISO;
+  const publishedISO = post.createdAt
+    ? new Date(post.createdAt).toISOString()
+    : undefined;
+  const modifiedISO = post.updatedAt
+    ? new Date(post.updatedAt).toISOString()
+    : publishedISO;
 
-  // ---- Structured data: BlogPosting is preferred for articles ----
   const articleSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
     headline: post.title,
     description: pageDescription,
     image: imageUrl ? [imageUrl] : undefined,
     datePublished: publishedISO,
     dateModified: modifiedISO,
     author: post.author
-      ? { '@type': 'Person', name: post.author }
-      : { '@type': 'Organization', name: 'Maarula Classes' },
+      ? { "@type": "Person", name: post.author }
+      : { "@type": "Organization", name: "Maarula Classes" },
     publisher: {
-      '@type': 'Organization',
-      name: 'Maarula Classes',
+      "@type": "Organization",
+      name: "Maarula Classes",
       logo: {
-        '@type': 'ImageObject',
-        url: 'https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png'
-      }
+        "@type": "ImageObject",
+        url: "https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png",
+      },
     },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl }
+    mainEntityOfPage: { "@type": "WebPage", "@id": pageUrl },
   };
 
   const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://question.maarula.in/' },
-      { '@type': 'ListItem', position: 2, name: 'Articles', item: 'https://question.maarula.in/articles' },
-      { '@type': 'ListItem', position: 3, name: post.title, item: pageUrl }
-    ]
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://question.maarula.in/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Articles",
+        item: "https://question.maarula.in/articles",
+      },
+      { "@type": "ListItem", position: 3, name: post.title, item: pageUrl },
+    ],
   };
+
+  /* ---------- UI ---------- */
+  const shareText = `${post.title} - ${pageUrl}`;
 
   return (
     <>
       <Helmet>
+        <html lang="en" />
         <title>{esc(pageTitle)}</title>
         <meta name="description" content={esc(pageDescription)} />
         <link rel="canonical" href={pageUrl} />
 
-        {/* Open Graph */}
+        {/* Open Graph / Twitter */}
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Maarula Classes" />
         <meta property="og:title" content={esc(pageTitle)} />
         <meta property="og:description" content={esc(pageDescription)} />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:image" content={imageUrl} />
-        {/* helpful for some platforms */}
-        {publishedISO && <meta property="article:published_time" content={publishedISO} />}
-        {modifiedISO && <meta property="article:modified_time" content={modifiedISO} />}
+        {publishedISO && (
+          <meta property="article:published_time" content={publishedISO} />
+        )}
+        {modifiedISO && (
+          <meta property="article:modified_time" content={modifiedISO} />
+        )}
 
-        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={esc(pageTitle)} />
         <meta name="twitter:description" content={esc(pageDescription)} />
         <meta name="twitter:image" content={imageUrl} />
 
-        {/* Structured Data */}
-        <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+        {/* JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
-      <div className={styles.pageWrapper}>
-        <header className={styles.postHeader}>
-          <p className={styles.category}>{post.category}</p>
-          <h1>{post.title}</h1>
-          <div className={styles.meta}>
-            <span>By {post.author || 'Maarula Classes'}</span>
-            <span>&bull;</span>
+      <div className={styles.page}>
+        {/* Header */}
+        <header className={styles.header}>
+          {post.category && <p className={styles.category}>{post.category}</p>}
+          <h1 className={styles.title}>{post.title}</h1>
+          <p className={styles.meta}>
+            <span>By {post.author || "Maarula Classes"}</span>
+            <span className={styles.dot}>•</span>
             <span>
-              {new Date(post.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+              {new Date(post.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </span>
-          </div>
+            <span className={styles.dot}>•</span>
+            <span>{readingTime} min read</span>
+          </p>
         </header>
 
         {post.featuredImage && (
-          <img
-            src={post.featuredImage}
-            alt={post.title}
-            className={styles.featuredImage}
-            loading="lazy"
-            decoding="async"
-          />
+          <figure className={styles.heroFigure}>
+            <img
+              src={post.featuredImage}
+              alt={post.title}
+              loading="lazy"
+              decoding="async"
+            />
+            {post.imageCaption && <figcaption>{post.imageCaption}</figcaption>}
+          </figure>
         )}
 
+        {/* Content + Sidebar */}
         <div className={styles.container}>
-          <article className={styles.postArticle}>
-            <div className={styles.postContent} dangerouslySetInnerHTML={{ __html: post.content }} />
+          <article className={styles.article}>
+            {/* Mobile TOC */}
+            {toc.length > 0 && (
+              <details className={styles.tocMobile}>
+                <summary>On this page</summary>
+                <nav aria-label="Table of contents">
+                  <ul>
+                    {toc.map((h) => (
+                      <li
+                        key={h.id}
+                        className={h.level === 3 ? styles.tocH3 : styles.tocH2}
+                      >
+                        <a href={`#${h.id}`}>{h.text}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </details>
+            )}
+
+            <div
+              ref={contentRef}
+              className={styles.postContent}
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
 
             {post.videoURL && (
-              <div className={styles.videoContainer}>
-                <h3>Related Video Explanation</h3>
-                <div className={styles.playerWrapper}>
+              <section className={styles.videoBlock}>
+                <h3 className={styles.h3}>Related Video Explanation</h3>
+                <div className={styles.playerWrap}>
                   <ReactPlayer
                     url={post.videoURL}
-                    className={styles.reactPlayer}
+                    className={styles.player}
                     width="100%"
                     height="100%"
                     controls
                   />
                 </div>
-              </div>
+              </section>
             )}
 
-            <div className={styles.shareButtons}>
-              <span>This information is also important for your friend!, share now:</span>
+            <div className={styles.share}>
+              <span className={styles.shareLead}>
+                This information could help a friend — share:
+              </span>
+
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(`${post.title} - ${pageUrl}`)}`}
+                className={`${styles.social} ${styles.whatsapp}`}
+                href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Share on WhatsApp"
-                className={`${styles.socialIcon} ${styles.whatsapp}`}
               >
                 <FaWhatsapp />
               </a>
+
               <a
-                href={`https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(post.title)}`}
+                className={`${styles.social} ${styles.telegram}`}
+                href={`https://t.me/share/url?url=${encodeURIComponent(
+                  pageUrl
+                )}&text=${encodeURIComponent(post.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Share on Telegram"
-                className={`${styles.socialIcon} ${styles.telegram}`}
               >
                 <FaTelegram />
               </a>
+
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`}
+                className={`${styles.social} ${styles.facebook}`}
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                  pageUrl
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Share on Facebook"
-                className={`${styles.socialIcon} ${styles.facebook}`}
               >
                 <FaFacebook />
               </a>
+
               <a
-                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(post.title)}`}
+                className={`${styles.social} ${styles.twitter}`}
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                  pageUrl
+                )}&text=${encodeURIComponent(post.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Share on X"
-                className={`${styles.socialIcon} ${styles.twitter}`}
               >
                 <FaXTwitter />
               </a>
+
               <a
-                href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(pageUrl)}&title=${encodeURIComponent(post.title)}`}
+                className={`${styles.social} ${styles.linkedin}`}
+                href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
+                  pageUrl
+                )}&title=${encodeURIComponent(post.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Share on LinkedIn"
-                className={`${styles.socialIcon} ${styles.linkedin}`}
               >
                 <FaLinkedin />
               </a>
+
+              <button
+                type="button"
+                className={`${styles.social} ${styles.copy}`}
+                aria-label="Copy link"
+                onClick={() => navigator.clipboard.writeText(pageUrl)}
+              >
+                <FaLink />
+              </button>
             </div>
           </article>
 
-          <aside className={styles.sidebar}>
-            <div className={styles.sidebarWidget}>
-              <h3 className={styles.widgetTitle}>Recent Posts</h3>
-              {recentPosts.map(recent => (
-                <Link to={`/articles/${recent.slug}`} key={recent._id} className={styles.recentPost}>
-                  <h4>{recent.title}</h4>
-                  <span>{new Date(recent.createdAt).toLocaleDateString()}</span>
-                </Link>
-              ))}
+          <aside className={`${styles.sidebar} ${styles.sidebarSticky}`}>
+            {toc.length > 0 && (
+              <div className={styles.widget}>
+                <h3 className={styles.widgetTitle}>On this page</h3>
+                <nav aria-label="Table of contents">
+                  <ul className={styles.tocList}>
+                    {toc.map((h) => (
+                      <li
+                        key={h.id}
+                        className={h.level === 3 ? styles.tocH3 : styles.tocH2}
+                      >
+                        <a href={`#${h.id}`}>{h.text}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </div>
+            )}
+
+            <div className={styles.widget}>
+              <h3 className={styles.widgetTitle}>Recent posts</h3>
+              <ul className={styles.recentList}>
+                {recentPosts.map((r) => (
+                  <li key={r._id}>
+                    <Link
+                      to={`/articles/${r.slug}`}
+                      className={styles.recentItem}
+                    >
+                      <span className={styles.recentTitle}>{r.title}</span>
+                      <time className={styles.recentDate}>
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </time>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </aside>
         </div>
       </div>
     </>
   );
-};
-
-export default SinglePostPage;
+}
