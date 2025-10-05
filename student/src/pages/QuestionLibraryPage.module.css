@@ -1,30 +1,32 @@
-/* FINAL & COMPLETE - September 7, 2025 */
 
-/* --- 1. THEME & GLOBAL VARIABLES --- */
 :root {
-  --primary-color: #4f46e5;
-  --primary-color-dark: #4338ca;
-  --primary-color-light: #eef2ff;
-  --accent-color-yellow: #FBBF24; /* New yellow for buttons */
-  --accent-color-yellow-dark: #F59E0B; /* Darker yellow for hover */
-  --accent-color-yellow-light: #FEF3C7;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
+  /* Brand Accent Colors */
+  --brand-orange: #f97316;
+  --brand-orange-dark: #ea580c;
+  --brand-orange-light: #ffedd5;
+
+  /* Text Colors */
+  --text-primary: #18181b; /* [FIX] Corrected invalid hex code */
+  --text-secondary: #52525b;
   --text-light: #ffffff;
-  --background-color: #f8fafc;
+
+  /* UI & Layout Colors */
   --surface-color: #ffffff;
+  --background-color: #f8fafc;
   --border-color: #e2e8f0;
-  --border-color-focus: #a5b4fc;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-color-focus: #fb923c; /* A lighter orange for focus rings */
+
+  /* System Variables */
+  --shadow-sm: 0 1px 2px 0 rgb(24 24 27 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(24 24 27 / 0.1), 0 2px 4px -2px rgb(24 24 27 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(24 24 27 / 0.1), 0 4px 6px -4px rgb(24 24 27 / 0.1);
   --border-radius-sm: 6px;
   --border-radius-md: 12px;
   --border-radius-pill: 9999px;
   --transition-speed: 0.2s;
 }
 
-/* --- 2. LAYOUT & HERO SECTION --- */
+/* --- 2. LAYOUT, HERO, & BREADCRUMBS --- */
 .heroSection {
   background-color: var(--surface-color);
   border-bottom: 1px solid var(--border-color);
@@ -45,14 +47,32 @@
   line-height: 1.7;
 }
 
-.mainContentArea {
-  background-color: var(--background-color);
-  padding: 1px 0 40px;
-}
 .container {
   max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
+}
+
+/* [NEW] Visual Breadcrumbs */
+.visualBreadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  color: var(--text-secondary);
+}
+.visualBreadcrumbs a {
+  color: var(--brand-orange-dark);
+  text-decoration: none;
+}
+.visualBreadcrumbs a:hover {
+  text-decoration: underline;
+}
+.visualBreadcrumbs span:not([aria-hidden='true']) {
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 /* --- 3. INTRO CONTENT (NAV, FAQ, BENEFITS) --- */
@@ -64,6 +84,23 @@
   letter-spacing: 0.5px;
   margin: 40px 0 20px;
 }
+.benefitList li::before {
+  color: var(--brand-orange);
+}
+.hubNav a {
+  background-color: var(--brand-orange-light);
+  color: var(--brand-orange-dark);
+}
+.hubNav a:hover {
+  background-color: var(--brand-orange);
+  color: var(--text-light);
+  border-color: var(--brand-orange-dark);
+}
+.faq summary::after {
+  color: var(--brand-orange);
+}
+
+/* [Unchanged Intro Content] */
 .benefitList {
   display: inline-block;
   text-align: left;
@@ -80,15 +117,13 @@
   color: var(--text-secondary);
 }
 .benefitList li::before {
-  content: "✓";
+  content: '✓';
   position: absolute;
   left: 0;
   top: 0.1em;
-  color: var(--primary-color);
   font-weight: 700;
   font-size: 1.2rem;
 }
-
 .hubNav {
   margin-top: 40px;
 }
@@ -104,8 +139,6 @@
 .hubNav a {
   display: inline-block;
   text-decoration: none;
-  background-color: var(--primary-color-light);
-  color: var(--primary-color-dark);
   padding: 8px 18px;
   border-radius: var(--border-radius-pill);
   font-weight: 600;
@@ -113,14 +146,6 @@
   border: 1px solid var(--border-color);
   transition: all var(--transition-speed) ease;
 }
-.hubNav a:hover {
-  background-color: var(--primary-color);
-  color: var(--text-light);
-  border-color: var(--primary-color-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
 .faq {
   margin-top: 50px;
   padding-top: 40px;
@@ -150,7 +175,6 @@
 .faq summary::after {
   content: '▼';
   font-size: 0.8em;
-  color: var(--primary-color);
   transform-origin: center;
   transition: transform var(--transition-speed) ease;
 }
@@ -181,6 +205,23 @@
   align-items: center;
   min-height: 44px;
 }
+.headerControls {
+  /* [NEW] A simple container if more controls are added later */
+}
+.filterToggleButton:hover {
+  border-color: var(--border-color-focus);
+  background-color: var(--brand-orange-light);
+  color: var(--brand-orange-dark);
+}
+.activeFilterTag {
+  background-color: var(--brand-orange-light);
+  color: var(--brand-orange-dark);
+}
+.clearFilterTagButton {
+  color: var(--brand-orange-dark);
+}
+
+/* [Unchanged Filter Panel] */
 .filterToggleButton {
   display: inline-flex;
   align-items: center;
@@ -196,11 +237,6 @@
   transition: all var(--transition-speed) ease;
   box-shadow: var(--shadow-sm);
   white-space: nowrap;
-}
-.filterToggleButton:hover {
-  border-color: var(--border-color-focus);
-  background-color: var(--primary-color-light);
-  color: var(--primary-color);
 }
 .filterPanel {
   position: absolute;
@@ -240,12 +276,10 @@
 .activeFilterTag {
   display: inline-flex;
   align-items: center;
-  background-color: var(--accent-color-yellow-light);
-  color: var(--accent-color-yellow-dark);
   padding: 6px 12px;
   border-radius: var(--border-radius-pill);
   font-size: 0.9rem;
-  font-weight: 600; /* Bolder for clarity */
+  font-weight: 600;
 }
 .activeFilterTag strong {
   margin-left: 6px;
@@ -254,7 +288,6 @@
 .clearFilterTagButton {
   background: none;
   border: none;
-  color: var(--accent-color-yellow-dark);
   cursor: pointer;
   margin-left: 8px;
   padding: 0;
@@ -276,7 +309,54 @@
   margin-left: auto;
 }
 
-/* --- 5. FILTER FORM CONTENT (Inside Panel/Sidebar) --- */
+/* --- 5. FILTER FORM CONTENT --- */
+.searchInput:focus {
+  outline: none;
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px var(--brand-orange-light);
+}
+.searchSubmitButton {
+  background-color: var(--brand-orange);
+  color: var(--text-primary);
+}
+.searchSubmitButton:hover {
+  background-color: var(--brand-orange-dark);
+}
+.filterLink:hover {
+  background-color: var(--brand-orange-light);
+  border-color: var(--brand-orange);
+  color: var(--brand-orange-dark);
+}
+.filterLink.activeFilter {
+  background-color: var(--brand-orange);
+  color: var(--text-light);
+  border-color: var(--brand-orange-dark);
+  font-weight: 600;
+}
+.applyFiltersButton {
+  background-color: var(--brand-orange);
+  color: var(--text-light);
+}
+.applyFiltersButton:hover {
+  background-color: var(--brand-orange-dark);
+}
+
+/* [NEW] Filter Skeleton */
+.filterSkeleton {
+  padding: 10px 0;
+}
+.skelLine {
+  background-color: #e2e8f0;
+  height: 20px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+.skelLine:last-child {
+  margin-bottom: 0;
+}
+
+/* [Unchanged Filter Form] */
 .filterContent {
   display: grid;
   grid-template-columns: 1fr;
@@ -284,7 +364,7 @@
 }
 .searchForm {
   position: relative;
-  align-items: center;  
+  align-items: center;
   display: flex;
   gap: 10px;
 }
@@ -296,11 +376,6 @@
   font-size: 1rem;
   transition: all var(--transition-speed) ease;
 }
-.searchInput:focus {
-  outline: none;
-  border-color: var(--accent-color-yellow);
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
-}
 .searchIcon {
   position: absolute;
   left: 15px;
@@ -311,21 +386,16 @@
 }
 .searchForm .searchInput,
 .searchForm .searchSubmitButton {
-  height: 45px;                     
+  height: 45px;
 }
 .searchSubmitButton {
-  padding: 8px 16px; /* Smaller padding */
+  padding: 8px 16px;
   font-weight: 600;
-  font-size: 0.9rem; /* Smaller font */
-  background-color: var(--accent-color-yellow);
-  color: var(--text-primary);
+  font-size: 0.9rem;
   border: none;
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   transition: background-color var(--transition-speed) ease;
-}
-.searchSubmitButton:hover {
-  background-color: var(--accent-color-yellow-dark);
 }
 .searchSubmitButton:disabled {
   opacity: 0.6;
@@ -353,38 +423,13 @@
   text-decoration: none;
   transition: all var(--transition-speed) ease;
 }
-.filterLink:hover {
-  background-color: var(--accent-color-yellow-light);
-  border-color: var(--accent-color-yellow);
-  color: var(--accent-color-yellow-dark);
-}
-.filterLink.activeFilter {
-  background-color: var(--accent-color-yellow);
-  color: var(--text-primary);
-  border-color: var(--accent-color-yellow-dark);
-  font-weight: 600;
-}
 .filterActions {
   grid-column: 1 / -1;
   display: flex;
   gap: 15px;
   margin-top: 20px;
 }
-.applyFiltersButton {
-  flex: 1;
-  padding: 12px 15px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: var(--border-radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-speed) ease;
-  background-color: var(--accent-color-yellow); /* Yellow color */
-  color: var(--text-primary); /* Dark text for readability */
-  border: none;
-}
-.applyFiltersButton:hover {
-  background-color: var(--accent-color-yellow-dark);
-}
+.applyFiltersButton,
 .clearAllFiltersButton {
   flex: 1;
   padding: 12px 15px;
@@ -393,6 +438,9 @@
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   transition: all var(--transition-speed) ease;
+  border: none;
+}
+.clearAllFiltersButton {
   background-color: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
@@ -404,6 +452,19 @@
 }
 
 /* --- 6. QUESTION LIST & CARDS --- */
+.questionCard:hover {
+  border-color: var(--brand-orange);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+.tag {
+  background-color: var(--brand-orange-light);
+  color: var(--brand-orange-dark);
+}
+.viewLink {
+  color: var(--brand-orange);
+}
+
 .questionCard {
   display: block;
   text-decoration: none;
@@ -416,11 +477,6 @@
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-speed) ease-in-out;
 }
-.questionCard:hover {
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-3px);
-}
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -428,8 +484,6 @@
   margin-bottom: 15px;
 }
 .tag {
-  background-color: var(--primary-color-light);
-  color: var(--primary-color-dark);
   padding: 5px 12px;
   border-radius: var(--border-radius-pill);
   font-size: 0.8rem;
@@ -440,19 +494,26 @@
   line-height: 1.7;
   color: var(--text-primary);
   margin-bottom: 20px;
+  /* [MODIFIED] Restore horizontal scroll for overflow content */
   overflow-x: auto;
   white-space: normal;
   padding-bottom: 15px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) transparent;
 }
-.questionText::-webkit-scrollbar { height: 8px; }
-.questionText::-webkit-scrollbar-track { background: transparent; }
+/* [MODIFIED] Custom scrollbar styling */
+.questionText::-webkit-scrollbar {
+  height: 8px;
+}
+.questionText::-webkit-scrollbar-track {
+  background: transparent;
+}
 .questionText::-webkit-scrollbar-thumb {
   background-color: var(--border-color);
   border-radius: 10px;
   border: 3px solid var(--surface-color);
 }
+/* [MODIFIED] Prevent images/tables from breaking layout */
 .questionText img,
 .questionText table {
   max-width: 100%;
@@ -462,7 +523,6 @@
 .viewLink {
   display: inline-block;
   margin-top: 15px;
-  color: var(--primary-color);
   font-weight: 600;
   transition: transform var(--transition-speed) ease;
 }
@@ -470,21 +530,43 @@
   transform: translateX(4px);
 }
 
-/* --- 7. PAGINATION & STATES --- */
+/* --- 7. PAGINATION & STATES (IMPROVED) --- */
 .paginationControls {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 50px;
 }
 .paginationControls span {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--brand-orange-dark);
+  padding: 10px 16px;
   border-radius: var(--border-radius-sm);
-  background-color: var(--primary-color-light);
+  background-color: var(--brand-orange-light);
+  text-align: center;
+  flex-shrink: 0;
+  order: 2; /* Mobile ordering */
+}
+.pageButtonsContainer {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.goToContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  order: 4; /* Mobile ordering */
+}
+.goToInput {
+  width: 70px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  text-align: center;
 }
 .paginationButton {
   background-color: var(--surface-color);
@@ -500,20 +582,63 @@
   align-items: center;
   gap: 8px;
 }
+.paginationButton:first-of-type {
+  order: 1; /* Mobile ordering: Prev button first */
+}
+.paginationButton:last-of-type {
+  order: 3; /* Mobile ordering: Next button after page count */
+}
 .paginationButton:hover:not(:disabled) {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color-dark);
+  background-color: var(--brand-orange);
+  border-color: var(--brand-orange-dark);
   color: var(--text-light);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
+.paginationButton.activePage {
+  background-color: var(--brand-orange);
+  border-color: var(--brand-orange-dark);
+  color: var(--text-light);
+}
 .paginationButton:disabled {
   background-color: #f1f5f9;
   color: #94a3b8;
-  opacity: 1;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+}
+.ellipsis {
+  color: var(--text-secondary);
+  padding: 0 5px;
+}
+
+/* [NEW] Error, No Results, and Loading States */
+.errorBox {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: var(--brand-orange-light);
+  border: 1px solid var(--brand-orange);
+  border-radius: var(--border-radius-md);
+}
+.errorBox p {
+  color: var(--brand-orange-dark);
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+}
+.errorActions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+.retryButton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: var(--brand-orange);
+  color: var(--text-light);
+  border: none;
 }
 .noResults {
   text-align: center;
@@ -522,11 +647,29 @@
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
 }
-.noResults h3 { font-size: 1.5rem; margin-bottom: 10px; }
-.noResults p { color: var(--text-secondary); margin-bottom: 25px; }
-.spinner { animation: spin 1s linear infinite; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.skeletonContainer { display: grid; gap: 20px; }
+.noResults h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+.noResults p {
+  color: var(--text-secondary);
+  margin-bottom: 25px;
+}
+.spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.skeletonContainer {
+  display: grid;
+  gap: 20px;
+}
 .questionCardSkeleton {
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
@@ -541,9 +684,17 @@
   margin-bottom: 15px;
   animation: pulse 1.5s infinite ease-in-out;
 }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
 
-/* --- 8. MOBILE & RESPONSIVE --- */
+/* --- 8. MOBILE, RESPONSIVE & [NEW] SCROLL-TO-TOP --- */
 .filterSidebar {
   display: none;
   position: fixed;
@@ -559,7 +710,9 @@
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
 }
-.filterSidebar.open { transform: translateX(0); }
+.filterSidebar.open {
+  transform: translateX(0);
+}
 .closeFilterButton {
   display: flex;
   align-items: center;
@@ -579,23 +732,77 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1001;
   backdrop-filter: blur(2px);
 }
-
-@media (max-width: 768px) {
-  .heroSection, .benefitList, .faq h2 { text-align: left; }
-  .hubNav ul { justify-content: flex-start; }
-  .heroSection h1 { font-size: 2.2rem; }
-  .filterPanel { display: none; }
-  .filterSidebar { display: block; }
-  .filterActions { flex-direction: column; }
+.scrollTopButton {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed) ease;
+}
+.scrollTopButton:hover {
+  background-color: var(--brand-orange);
+  color: var(--text-light);
+  transform: translateY(-2px);
 }
 
-@media (min-width: 768px) {
-  .filterContent { 
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+@media (max-width: 768px) {
+  .heroSection,
+  .benefitList,
+  .faq h2 {
+    text-align: left;
+  }
+  .hubNav ul {
+    justify-content: flex-start;
+  }
+  .heroSection h1 {
+    font-size: 2.2rem;
+  }
+  .filterPanel {
+    display: none;
+  }
+  .filterSidebar {
+    display: block;
+  }
+  .filterActions {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 769px) {
+  .filterContent {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  .paginationControls {
+    justify-content: center;
+  }
+  .paginationControls span {
+    display: none;
+  }
+  .pageButtonsContainer,
+  .goToContainer {
+    display: flex;
+  }
+  /* Reset order for desktop */
+  .paginationControls > *,
+  .paginationButton,
+  .paginationControls span,
+  .goToContainer {
+    order: 0;
   }
 }
 
@@ -609,18 +816,19 @@
 .clearFilterTagButton:focus-visible,
 .closeFilterButton:focus-visible,
 .hubNav a:focus-visible,
-.viewLink:focus-visible,
-.questionCard:focus-visible {
-  outline: 3px solid var(--primary-color-light);
+.questionCard:focus-visible,
+.scrollTopButton:focus-visible {
+  outline: 3px solid var(--brand-orange-light);
   outline-offset: 2px;
   box-shadow: 0 0 0 2px var(--border-color-focus);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { 
+  * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }
+

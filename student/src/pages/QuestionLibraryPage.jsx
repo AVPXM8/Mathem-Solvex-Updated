@@ -1,43 +1,59 @@
-// QuestionLibraryPage.jsx
-// FINAL — Staged filters (apply on Search/Done), focus-safe search (stable subcomponent),
-// AbortController in-effect, SEO & pagination preserved.
+
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import api from '../api';
 import { Helmet } from 'react-helmet-async';
 import MathPreview from '../components/MathPreview';
-import { Filter, Search, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import {
+  Filter,
+  Search,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  ArrowUp,
+  RefreshCw,
+} from 'lucide-react';
 import styles from './QuestionLibraryPage.module.css';
 
 const SITE_URL = 'https://question.maarula.in';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og/maarula-question-bank.png`;
-
-// Build absolute URLs for SEO tags (canonical, prev/next, schema.org)
-const absUrl = (path, query = '') => `${SITE_URL}${path}${query ? `?${query}` : ''}`;
-
-// Sanitize any accidental double slashes in path fragments
+const absUrl = (path, query = '') => `${SITE_URL}${path}${query ? `?${query}` : ''};
+`;
 const sanitizePath = (p) => p.replace(/\/{2,}/g, '/');
 
 /* -------------------------------------------------------------------------- */
-/*  STABLE FILTER FORM (OUTSIDE PARENT) — prevents input losing focus          */
-/*  Now uses STAGED state (pendingExam/pendingSubject) and BUTTONS (not Links) */
+/*  STABLE FILTER FORM (OUTSIDE PARENT) — includes Year + filter skeleton     */
 /* -------------------------------------------------------------------------- */
 const FilterFormContent = React.memo(function FilterFormContent({
-  onSubmitSearch,           // submit handler from parent (applies + closes)
+  onSubmitSearch,
   searchTerm,
   setSearchTerm,
   filterOptions,
-  // staged selections
   pendingExam,
   setPendingExam,
   pendingSubject,
   setPendingSubject,
-  // apply all staged changes (also closes)
+  pendingYear,
+  setPendingYear,
   applyFilters,
-  // clear helpers
   clearAllFilters,
+  filterLoading,
 }) {
+  // Simple skeleton for filter loading state
+  if (filterLoading) {
+    return (
+      <div className={styles.filterContent}>
+        <div className={styles.filterSkeleton}>
+          <div className={styles.skelLine} style={{ width: '80%' }} />
+          <div className={styles.skelLine} style={{ width: '60%' }} />
+          <div className={styles.skelLine} style={{ width: '90%' }} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.filterContent}>
       <form
@@ -100,18 +116,37 @@ const FilterFormContent = React.memo(function FilterFormContent({
         </div>
       </div>
 
+      <div className={styles.filterGroup}>
+        <h4>Year</h4>
+        <div className={styles.filterOptionsContainer}>
+          {(filterOptions.years ?? []).map((year) => {
+            const isActive = String(pendingYear) === String(year);
+            return (
+              <button
+                type="button"
+                key={year}
+                className={`${styles.filterLink} ${isActive ? styles.activeFilter : ''}`}
+                aria-pressed={isActive}
+                onClick={() => setPendingYear((prev) => (String(prev) === String(year) ? '' : year))}
+              >
+                {year}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className={styles.filterActions}>
-        {/* APPLY staged selections + search; also closes panel */}
         <button type="button" onClick={applyFilters} className={styles.applyFiltersButton}>
           Done
         </button>
 
-        {/* Clear both applied & staged selections */}
         <button
           type="button"
           onClick={() => {
             setPendingExam('');
             setPendingSubject('');
+            setPendingYear('');
             clearAllFilters();
           }}
           className={styles.clearAllFiltersButton}
@@ -126,13 +161,14 @@ const FilterFormContent = React.memo(function FilterFormContent({
 /* -------------------------------------------------------------------------- */
 /*                               PAGE COMPONENT                                */
 /* -------------------------------------------------------------------------- */
-
 const QuestionLibraryPage = () => {
   // Data + UI state
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterOptions, setFilterOptions] = useState({ exams: [], subjects: [], years: [] });
+  const [filterLoading, setFilterLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [error, setError] = useState(null);
 
   // Router + pagination
   const [searchParams, setSearchParams] = useSearchParams();
@@ -148,6 +184,13 @@ const QuestionLibraryPage = () => {
   // STAGED selections (not applied until Search/Done)
   const [pendingExam, setPendingExam] = useState('');
   const [pendingSubject, setPendingSubject] = useState('');
+  const [pendingYear, setPendingYear] = useState('');
+
+  // Go-to input (optional)
+  const [jumpPage, setJumpPage] = useState('');
+
+  // Scroll-to-top visibility
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Refs
   const questionListRef = useRef(null);
@@ -159,6 +202,7 @@ const QuestionLibraryPage = () => {
       search: searchParams.get('search') || '',
       exam: searchParams.get('exam') || '',
       subject: searchParams.get('subject') || '',
+      year: searchParams.get('year') || '',
       page: parseInt(searchParams.get('page') || '1', 10),
       limit: parseInt(searchParams.get('limit') || '10', 10),
     }),
@@ -175,6 +219,7 @@ const QuestionLibraryPage = () => {
     if (isFilterOpen) {
       setPendingExam(currentAppliedFilters.exam || '');
       setPendingSubject(currentAppliedFilters.subject || '');
+      setPendingYear(currentAppliedFilters.year || '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFilterOpen]);
@@ -183,12 +228,15 @@ const QuestionLibraryPage = () => {
   const applyFilters = () => {
     const newParams = new URLSearchParams(searchParams);
 
-    // staged exam/subject
+    // staged exam/subject/year
     if (pendingExam) newParams.set('exam', pendingExam);
     else newParams.delete('exam');
 
     if (pendingSubject) newParams.set('subject', pendingSubject);
     else newParams.delete('subject');
+
+    if (pendingYear) newParams.set('year', String(pendingYear));
+    else newParams.delete('year');
 
     // current search text
     const trimmed = searchTerm.trim();
@@ -212,6 +260,7 @@ const QuestionLibraryPage = () => {
   // Fetch filters once
   useEffect(() => {
     let active = true;
+    setFilterLoading(true);
     (async () => {
       try {
         const res = await api.get('/questions/filters');
@@ -225,6 +274,8 @@ const QuestionLibraryPage = () => {
       } catch (e) {
         console.error('Failed to fetch filters', e);
         setFilterOptions({ exams: [], subjects: [], years: [] });
+      } finally {
+        if (active) setFilterLoading(false);
       }
     })();
     return () => {
@@ -235,6 +286,7 @@ const QuestionLibraryPage = () => {
   // Fetch questions on applied URL change
   useEffect(() => {
     setLoading(true);
+    setError(null);
     const controller = new AbortController();
     const { signal } = controller;
 
@@ -244,6 +296,7 @@ const QuestionLibraryPage = () => {
       search: currentAppliedFilters.search,
       exam: currentAppliedFilters.exam,
       subject: currentAppliedFilters.subject,
+      year: currentAppliedFilters.year,
     };
 
     api
@@ -257,8 +310,10 @@ const QuestionLibraryPage = () => {
         setLimit(q.limit ?? 10);
       })
       .catch((err) => {
+        // ignore Abort / Canceled exceptions
         if (err?.name !== 'CanceledError' && err?.message !== 'canceled') {
           console.error('Failed to fetch data', err);
+          setError('Failed to load questions. Please check your connection and retry.');
           setQuestions([]);
           setTotalDocs(0);
           setTotalPages(1);
@@ -294,6 +349,7 @@ const QuestionLibraryPage = () => {
     setSearchTerm('');
     setPendingExam('');
     setPendingSubject('');
+    setPendingYear('');
     setSearchParams({ page: '1', limit: String(limit) });
     setIsFilterOpen(false);
     filterToggleBtnRef.current?.focus();
@@ -310,6 +366,7 @@ const QuestionLibraryPage = () => {
       if (isFilterOpen) {
         if (filterName === 'exam') setPendingExam('');
         if (filterName === 'subject') setPendingSubject('');
+        if (filterName === 'year') setPendingYear('');
       }
     }
     newParams.set('page', '1');
@@ -330,26 +387,26 @@ const QuestionLibraryPage = () => {
   // Active filter chips
   const activeFilterDisplay = useMemo(() => {
     const active = [];
-    if (currentAppliedFilters.exam)
-      active.push({ name: 'Exam', value: currentAppliedFilters.exam, key: 'exam' });
-    if (currentAppliedFilters.subject)
-      active.push({ name: 'Subject', value: currentAppliedFilters.subject, key: 'subject' });
-    if (currentAppliedFilters.search)
-      active.push({ name: 'Search', value: currentAppliedFilters.search, key: 'search' });
+    if (currentAppliedFilters.exam) active.push({ name: 'Exam', value: currentAppliedFilters.exam, key: 'exam' });
+    if (currentAppliedFilters.subject) active.push({ name: 'Subject', value: currentAppliedFilters.subject, key: 'subject' });
+    if (currentAppliedFilters.year) active.push({ name: 'Year', value: currentAppliedFilters.year, key: 'year' });
+    if (currentAppliedFilters.search) active.push({ name: 'Search', value: currentAppliedFilters.search, key: 'search' });
     return active;
   }, [currentAppliedFilters]);
 
   const hasActiveFilters = !!(
     currentAppliedFilters.exam ||
     currentAppliedFilters.subject ||
+    currentAppliedFilters.year ||
     currentAppliedFilters.search
   );
 
-  // SEO
+  // SEO (same as before)
   const pageTitle = useMemo(() => {
     const bits = [];
     if (currentAppliedFilters.exam) bits.push(currentAppliedFilters.exam);
     if (currentAppliedFilters.subject) bits.push(currentAppliedFilters.subject);
+    if (currentAppliedFilters.year) bits.push(currentAppliedFilters.year);
     if (currentAppliedFilters.search) bits.push(`"${currentAppliedFilters.search}"`);
     const prefix = bits.length ? `${bits.join(' ')} PYQs | ` : '';
     const pageNum = totalPages > 1 ? `Page ${currentPage} of ${totalPages} | ` : '';
@@ -360,12 +417,13 @@ const QuestionLibraryPage = () => {
     const bits = [];
     if (currentAppliedFilters.exam) bits.push(currentAppliedFilters.exam);
     if (currentAppliedFilters.subject) bits.push(currentAppliedFilters.subject);
+    if (currentAppliedFilters.year) bits.push(`Year ${currentAppliedFilters.year}`);
     if (currentAppliedFilters.search) bits.push(`matching "${currentAppliedFilters.search}"`);
     const filterDesc = bits.length ? `Filtered by ${bits.join(', ')}. ` : '';
     return `Practice 17 years of MCA entrance PYQs (NIMCET, CUET-PG & more) with detailed solutions and video explanations across Mathematics, Computer Science, English, Logical Reasoning, and Aptitude. ${filterDesc}Search and filter to prepare smarter.`;
   }, [currentAppliedFilters]);
 
-  // Canonical + prev/next
+  // prev/next urls for SEO
   const canonicalUrl = absUrl(location.pathname, searchParams.toString());
   const prevQuery = new URLSearchParams(searchParams);
   prevQuery.set('page', String(currentPage - 1));
@@ -377,7 +435,7 @@ const QuestionLibraryPage = () => {
   const nextPageUrl =
     showPrevNext && currentPage < totalPages ? absUrl(location.pathname, nextQuery.toString()) : null;
 
-  // Structured data
+  // Structured data (same as before)
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -441,6 +499,80 @@ const QuestionLibraryPage = () => {
     ],
   };
 
+  // Scroll-to-top listener
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || window.pageYOffset;
+      setShowScrollTop(y > 400);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Retry fetch (for error state)
+  const retryFetch = () => {
+    // Keep params same — trigger useEffect by nudging page param (or call fetch directly)
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', String(currentAppliedFilters.page || 1));
+    setSearchParams(newParams);
+  };
+
+  // Page number generation (compact with ellipses)
+  const renderPageButtons = () => {
+    const pages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, currentPage + 2);
+
+    if (currentPage <= 3) end = Math.min(totalPages, maxVisible);
+    if (currentPage > totalPages - 3) start = Math.max(1, totalPages - maxVisible + 1);
+
+    if (start > 1) {
+      pages.push(
+        <button
+          key={1}
+          onClick={() => goToPage(1)}
+          className={`${styles.paginationButton} ${currentPage === 1 ? styles.activePage : ''}`}
+          aria-label="Page 1"
+        >
+          1
+        </button>
+      );
+      if (start > 2) pages.push(<span key="sep-start" className={styles.ellipsis}>...</span>);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => goToPage(i)}
+          className={`${styles.paginationButton} ${currentPage === i ? styles.activePage : ''}`}
+          aria-label={`Page ${i}`}
+          disabled={loading}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    if (end < totalPages) {
+      if (end < totalPages - 1) pages.push(<span key="sep-end" className={styles.ellipsis}>...</span>);
+      pages.push(
+        <button
+          key={totalPages}
+          onClick={() => goToPage(totalPages)}
+          className={`${styles.paginationButton} ${currentPage === totalPages ? styles.activePage : ''}`}
+          aria-label={`Page ${totalPages}`}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    return pages;
+  };
+
   return (
     <>
       {/* SEO Head */}
@@ -478,6 +610,7 @@ const QuestionLibraryPage = () => {
           <li>Topic-wise PYQs mapped to the latest exam patterns</li>
           <li>Step-by-step solutions, many with concise video explanations</li>
           <li>Fast filters and search to target your weak areas</li>
+          <li>The Good news is that everything you will get at no cost as everyhting is free.</li>
         </ul>
 
         <nav className={styles.hubNav} aria-label="Browse by category">
@@ -507,6 +640,7 @@ const QuestionLibraryPage = () => {
       )}
 
       <aside
+        id="filter-panel"
         className={`${styles.filterSidebar} ${isFilterOpen ? styles.open : ''}`}
         aria-label="Filters"
       >
@@ -530,18 +664,46 @@ const QuestionLibraryPage = () => {
           setPendingExam={setPendingExam}
           pendingSubject={pendingSubject}
           setPendingSubject={setPendingSubject}
+          pendingYear={pendingYear}
+          setPendingYear={setPendingYear}
           applyFilters={applyFilters}
           clearAllFilters={clearAllFilters}
+          filterLoading={filterLoading}
         />
       </aside>
 
       {/* Main content */}
       <div className={styles.container}>
-        <main>
+        <main aria-busy={loading} aria-live="polite" aria-describedby="list-status">
+          {/* Breadcrumbs (visual) */}
+          <nav aria-label="Breadcrumb" className={styles.visualBreadcrumbs}>
+            <Link to="/">Home</Link>
+            <span aria-hidden="true">›</span>
+            <Link to="/questions">Question Bank</Link>
+            {currentAppliedFilters.exam && (
+              <>
+                <span aria-hidden="true">›</span>
+                <span>{currentAppliedFilters.exam}</span>
+              </>
+            )}
+            {currentAppliedFilters.subject && (
+              <>
+                <span aria-hidden="true">›</span>
+                <span>{currentAppliedFilters.subject}</span>
+              </>
+            )}
+            {currentAppliedFilters.year && (
+              <>
+                <span aria-hidden="true">›</span>
+                <span>{currentAppliedFilters.year}</span>
+              </>
+            )}
+          </nav>
+
           {/* List header & controls */}
           <div className={styles.listControlsContainer}>
             <div className={styles.listHeader}>
-              <span role="status" aria-live="polite">
+              <span id="list-status" role="status" aria-live="polite">
                 {loading ? (
                   <>
                     <Loader2 size={18} className={styles.spinner} /> Loading…
@@ -551,20 +713,22 @@ const QuestionLibraryPage = () => {
                 )}
               </span>
 
-              <button
-                ref={filterToggleBtnRef}
-                className={styles.filterToggleButton}
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                aria-expanded={isFilterOpen}
-                aria-controls="filter-panel"
-              >
-                <Filter size={18} /> Filters
-              </button>
+              <div className={styles.headerControls}>
+                <button
+                  ref={filterToggleBtnRef}
+                  className={styles.filterToggleButton}
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  aria-expanded={isFilterOpen}
+                  aria-controls="filter-panel"
+                >
+                  <Filter size={18} /> Filters
+                </button>
+              </div>
             </div>
 
             {/* Inline filter panel (desktop) */}
             <div
-              id="filter-panel"
+              id="filter-panel-inline"
               className={`${styles.filterPanel} ${isFilterOpen ? styles.open : ''}`}
             >
               <FilterFormContent
@@ -576,8 +740,11 @@ const QuestionLibraryPage = () => {
                 setPendingExam={setPendingExam}
                 pendingSubject={pendingSubject}
                 setPendingSubject={setPendingSubject}
+                pendingYear={pendingYear}
+                setPendingYear={setPendingYear}
                 applyFilters={applyFilters}
                 clearAllFilters={clearAllFilters}
+                filterLoading={filterLoading}
               />
             </div>
 
@@ -596,10 +763,7 @@ const QuestionLibraryPage = () => {
                     </button>
                   </span>
                 ))}
-                <button
-                  onClick={clearAllFilters}
-                  className={styles.clearAllActiveTagsButton}
-                >
+                <button onClick={clearAllFilters} className={styles.clearAllActiveTagsButton}>
                   Clear All
                 </button>
               </div>
@@ -608,7 +772,19 @@ const QuestionLibraryPage = () => {
 
           {/* Results */}
           <div className={styles.questionList} ref={questionListRef}>
-            {loading ? (
+            {error ? (
+              <div className={styles.errorBox} role="alert" aria-live="assertive">
+                <p>{error}</p>
+                <div className={styles.errorActions}>
+                  <button onClick={retryFetch} className={styles.retryButton}>
+                    <RefreshCw size={16} /> Retry
+                  </button>
+                  <button onClick={clearAllFilters} className={styles.clearAllFiltersButton}>
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            ) : loading ? (
               <div className={styles.skeletonContainer}>
                 {Array.from({ length: limit }).map((_, i) => (
                   <div key={i} className={styles.questionCardSkeleton}>
@@ -635,26 +811,61 @@ const QuestionLibraryPage = () => {
                   </Link>
                 ))}
 
-                {/* Pagination */}
+                {/* Pagination (advanced) */}
                 {totalPages > 1 && (
                   <nav className={styles.paginationControls} aria-label="Pagination">
                     <button
                       onClick={prevPage}
                       disabled={currentPage === 1 || loading}
                       className={styles.paginationButton}
+                      aria-label="Previous page"
                     >
                       <ChevronLeft size={20} /> Previous
                     </button>
-                    <span>
-                      Page {currentPage} of {totalPages}
-                    </span>
+
+                    <div className={styles.pageButtonsContainer} role="navigation" aria-label="Page numbers">
+                      {renderPageButtons()}
+                    </div>
+
                     <button
                       onClick={nextPage}
                       disabled={currentPage === totalPages || loading}
                       className={styles.paginationButton}
+                      aria-label="Next page"
                     >
                       Next <ChevronRight size={20} />
                     </button>
+
+                    {/* Go to Page Input */}
+                    <div className={styles.goToContainer} aria-hidden={loading}>
+                      <input
+                        type="number"
+                        min="1"
+                        max={totalPages}
+                        placeholder="Go to"
+                        value={jumpPage}
+                        onChange={(e) => setJumpPage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const page = Number(jumpPage);
+                            if (page >= 1 && page <= totalPages) goToPage(page);
+                            else alert(`Please enter a number between 1 and ${totalPages}`);
+                          }
+                        }}
+                        aria-label="Go to page number"
+                        className={styles.goToInput}
+                      />
+                      <button
+                        onClick={() => {
+                          const page = Number(jumpPage);
+                          if (page >= 1 && page <= totalPages) goToPage(page);
+                          else alert(`Please enter a number between 1 and ${totalPages}`);
+                        }}
+                        className={styles.paginationButton}
+                      >
+                        Go
+                      </button>
+                    </div>
                   </nav>
                 )}
               </>
@@ -690,8 +901,25 @@ const QuestionLibraryPage = () => {
                 Use the filters for exam and subject, and the search box for topics, keywords, or formula names.
               </p>
             </details>
+             <details>
+              <summary>Do I need to pay for the question bank?</summary>
+              <p>
+                No, Mathem Solvex Offers you everything for free, you do not need to pay anything for question bank You will get NIMCET and CUET PYQ and all the information for free.
+              </p>
+            </details>
           </section>
         </main>
+
+        {/* Scroll-to-top button */}
+        {showScrollTop && (
+          <button
+            className={styles.scrollTopButton}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Scroll to top"
+          >
+            <ArrowUp size={18} />
+          </button>
+        )}
       </div>
     </>
   );
