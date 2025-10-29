@@ -139,6 +139,8 @@ const AddQuestionPage = () => {
                         <select name="exam" value={formData.exam} onChange={handleInputChange}>
                             <option value="NIMCET">NIMCET</option>
                             <option value="CUET PG">CUET PG</option>
+                            <option value="MAH-CET">MAH-CET</option>
+                            <option value="JAMIA">JAMIA</option>
                             <option value="JEE">JEE</option>
                         </select>
                     </div>

@@ -105,6 +105,7 @@ exports.getPublicQuestions = async (req, res) => {
         // Example:
         if (req.query.exam) query.exam = req.query.exam;
         if (req.query.subject) query.subject = { $regex: req.query.subject, $options: 'i' };
+        if (req.query.year) query.year = parseInt(req.query.year);
         if (req.query.search) {
             query.$or = [
                 { questionText: { $regex: req.query.search, $options: 'i' } },
