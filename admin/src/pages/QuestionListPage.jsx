@@ -9,7 +9,7 @@ import { useDebounce } from '../hooks/useDebounce';
 
 const ITEMS_PER_PAGE = 15;
 
-// ✅ ADDED: get page from sessionStorage
+// get page from sessionStorage
 const getInitialPage = () => {
   const saved = sessionStorage.getItem('questionListPage');
   return saved ? Number(saved) : 1;
@@ -22,8 +22,7 @@ const QuestionListPage = () => {
   const [filters, setFilters] = useState({ exam: '', subject: '', year: '' });
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ❌ OLD: useState(1)
-  // ✅ ADDED: initialize from sessionStorage
+  // ADDED: initialize from sessionStorage
   const [currentPage, setCurrentPage] = useState(getInitialPage);
 
   const [totalPages, setTotalPages] = useState(1);
@@ -33,12 +32,12 @@ const QuestionListPage = () => {
     direction: 'desc',
   });
 
-  // ✅ ADDED: go-to-page input
+  //  ADDED: go-to-page input
   const [pageInput, setPageInput] = useState('');
 
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
 
-  // ✅ ADDED: persist page on change
+  //  ADDED: persist page on change
   useEffect(() => {
     sessionStorage.setItem('questionListPage', currentPage);
   }, [currentPage]);
@@ -108,7 +107,7 @@ const QuestionListPage = () => {
     setSortConfig({ key: 'createdAt', direction: 'desc' });
   };
 
-  // ✅ ADDED: go-to-page handler
+  // ADDED: go-to-page handler
   const goToPage = () => {
     const page = Number(pageInput);
     if (!page || page < 1 || page > totalPages) {
@@ -147,6 +146,7 @@ const QuestionListPage = () => {
             <option value="CUET PG">CUET PG</option>
             <option value="JAMIA">JAMIA</option>
             <option value="MAH-CET">MAH-CET</option>
+            <option value="NDA">NDA</option>
             <option value="JEE">JEE</option>
           </select>
 
@@ -236,7 +236,7 @@ const QuestionListPage = () => {
           </table>
         </div>
 
-        {/* ✅ EXTENDED PAGINATION */}
+        {/* EXTENDED PAGINATION */}
         <div className={styles.pagination}>
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -254,7 +254,7 @@ const QuestionListPage = () => {
             Next
           </button>
 
-          {/* ✅ Go to page */}
+          {/* Go to page */}
           <input
             type="number"
             placeholder="Go to page"
