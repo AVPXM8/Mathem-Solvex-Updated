@@ -1,4 +1,3 @@
-// src/data/resourceData.js
 export const PYQ_DATA = {
   NIMCET: {
     yearwise: [
@@ -51,5 +50,56 @@ export const PYQ_DATA = {
       { id: 't26', title: 'Logarithms', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1761974045/8._Logarithms_NIMCET_PYQ_h7yavo.pdf' }
     ]
   },
-  'CUET PG': { yearwise: [], topicwise: [] }
+  'CUET PG': {
+    yearwise: [
+      { id: 'cp25', title: 'CUET PG 2025 Official Paper', year: '2025', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769320411/CUET-PG_2025_OFFICIAL_PAPER_w6yrxd.pdf', isNew: true },
+      { id: 'cp24', title: 'CUET PG 2024 Official Paper', year: '2024', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769320419/CUET-PG_2024_OFFICIAL_PAPER_hlcln8.pdf', isNew: true },
+      { id: 'cp23', title: 'CUET PG 2023 Official Paper', year: '2023', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769320412/CUET-PG_2023_OFFICIAL_PAPER_uc3eip.pdf' },
+      { id: 'cp22', title: 'CUET PG 2022 Official Paper', year: '2022', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769320413/CUET-PG_2022_OFFICIAL_PAPER_p74nht.pdf' },
+      { id: 'cp21', title: 'CUET PG 2021 Official Paper', year: '2021', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769320412/CUET-PG_2021_OFFICIAL_PAPER_jztbkg.pdf' }
+    ],
+    topicwise: [
+      // Computer Science
+      { id: 'cpt1', title: 'Computer Sc: Number System', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321805/NUMBER_SYSTEM_COMPUTER_CUET_PG_TOPIC_WISE_PYQ_gz1xzn.pdf' },
+      { id: 'cpt2', title: 'Computer Sc: Digital Computer', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321807/DIGITAL_COMPUTER_CUET_PG_TOPIC_WISE_PYQ_apvjsa.pdf' },
+      { id: 'cpt3', title: 'Computer Sc: Data Structures (DSA)', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321808/DSA_CUET_PG_TOPIC_WISE_PYQ_os2rs6.pdf' },
+      { id: 'cpt4', title: 'Computer Sc: Architecture', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321808/ARCHITECTURE_TOPIC_WISE_QUESTIONS_tg2p74.pdf' },
+      { id: 'cpt5', title: 'Computer Sc: Operating Systems (OS)', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321809/OS_COMPUTER_CUET_PG_TOPIC_WISE_PYQ_bxkorm.pdf' },
+      { id: 'cpt6', title: 'Computer Sc: Digital Circuits', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321811/CIRCUITS_TOPIC_WISE_PYQ_rhrg1a.pdf' },
+      { id: 'cpt7', title: 'Computer Sc: Boolean Algebra & Logic', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769409608/BOOLEAN___LOGIC_DESIGN_K_MAP_COMPUTER_CUET_PG_TOPIC_WISE_PYQ_aluk0h.pdf' },
+      // Mathematics
+      { id: 'cpt8', title: 'Mathematics: Topic-wise Collection', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769409662/MATHEMATICS_CUET_PG_TOPIC_WISE_PYQ_vn73db.pdf' },
+      { id: 'cpt9', title: 'Mathematics: Coordinate Geometry', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769409660/COORDINATE_GEOMETRY_CUET_PG_TOPIC_WISE_PYQ_lugvth.pdf' },
+      // Reasoning
+      { id: 'cpt10', title: 'General: Reasoning & Aptitude', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769409702/REASONING_CUET_PG_TOPIC_WISE_PYQ_jgwknr.pdf' }
+    ]
+  },
+  'JAMIA': {
+    yearwise: [
+      { id: 'j25', title: 'JAMIA 2025 Official Paper', year: '2025', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321692/JAMIA_2025_aalstx.pdf', isNew: true },
+      { id: 'j24', title: 'JAMIA 2024 Official Paper', year: '2024', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321700/JAMIA_2024_rlel3l.pdf', isNew: true },
+      { id: 'j23', title: 'JAMIA 2023 Official Paper', year: '2023', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321693/JAMIA_2023_tgp21t.pdf' },
+      { id: 'j22', title: 'JAMIA 2022 Official Paper', year: '2022', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321694/JAMIA_2022_yelkky.pdf' },
+      { id: 'j21', title: 'JAMIA 2021 Official Paper', year: '2021', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769321691/JAMIA_2021_ksllbc.pdf' }
+    ],
+    topicwise: []
+  },
+  'MAH-CET': {
+    yearwise: [
+      { id: 'mc25', title: 'MAH-CET 2025 Official Paper', year: '2025', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769562005/1._MAH-CET_2025_FINAL_luddcb.pdf', isNew: true }
+    ],
+    topicwise: []
+  },
+  'AMU': {
+    yearwise: [
+      { id: 'amu25', title: 'AMU 2025 Official Paper', year: '2025', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769562090/AMU-2025_xvird4.pdf', isNew: true }
+    ],
+    topicwise: []
+  },
+  'VITMEE': {
+    yearwise: [
+      { id: 'vit23', title: 'VITMEE 2023 Official Paper', year: '2023', url: 'https://res.cloudinary.com/dcaq1inz0/image/upload/v1769562994/VITMEE_2023_bm9hlk.pdf' }
+    ],
+    topicwise: []
+  }
 };

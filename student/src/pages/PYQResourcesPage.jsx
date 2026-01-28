@@ -1,61 +1,131 @@
-// src/pages/PYQResourcesPage.jsx
-import React, { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async'; // For Best SEO
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import styles from './PYQResourcesPage.module.css';
-import { Download, FileText, ArrowLeft, LayoutGrid, CalendarDays, Search, Sparkles } from 'lucide-react';
+import { 
+  Download, 
+  FileText, 
+  ArrowLeft, 
+  LayoutGrid, 
+  CalendarDays, 
+  Search, 
+  Sparkles, 
+  AlertCircle,
+  BookOpen
+} from 'lucide-react';
 import { PYQ_DATA } from '../data/resourceData';
 
 const PYQResourcesPage = () => {
-  const { examName } = useParams(); // Get exam name from URL
+  const { examName } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [viewType, setViewType] = useState('yearwise'); // 'yearwise' or 'topicwise'
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1. Landing Page View (No exam selected)
+  // Reset view to yearwise when exam changes to avoid stuck states
+  useEffect(() => {
+    setViewType('yearwise');
+    setSearchTerm('');
+  }, [examName]);
+
+  // Helper for proper capitalization (e.g., nimcet -> NIMCET)
+  const formatExamTitle = (name) => {
+    if (!name) return '';
+    // Handle special cases or default to uppercase/capitalized
+    if (name.toUpperCase() === 'CUET PG') return 'CUET PG';
+    if (name.toUpperCase() === 'MAH-CET') return 'MAH-CET';
+    return name.toUpperCase();
+  };
+
+  // --- 1. LANDING PAGE VIEW (No exam selected) ---
   if (!examName) {
     return (
       <>
         <Helmet>
-          <title>MCA Entrance PYQ PDF Download | NIMCET, CUET, JMI</title>
-          <meta name="description" content="Free download of Previous Year Question (PYQ) papers for NIMCET, CUET PG, and other MCA entrance exams. Topic-wise and Year-wise solutions available." />
+          <title>MCA Entrance PYQ PDF Download | NIMCET, CUET PG, JAMIA, MAH-CET</title>
+          <meta name="description" content="Free download of official Previous Year Question (PYQ) papers for NIMCET, CUET PG, JAMIA, MAH-CET, AMU, and VITMEE. Year-wise and Topic-wise solutions." />
+          <meta name="keywords" content="NIMCET PYQ, CUET PG Papers, JAMIA MCA Entrance, MAH-CET MCA, AMU MCA, VITMEE Previous Papers, MCA Entrance PDF" />
+          <link rel="canonical" href={window.location.origin + location.pathname} />
+          
+          <meta property="og:title" content="All MCA Entrance PYQ Downloads" />
+          <meta property="og:description" content="Access free PDF downloads of official question papers for all major MCA entrance exams." />
         </Helmet>
         
         <div className={styles.container}>
           <div className={styles.header}>
             <h1>PYQ Resource Center</h1>
-            <p>Download original question papers and topic-wise solved PDFs.</p>
+            <p>Select an exam to download official previous year question papers.</p>
           </div>
           
           <div className={styles.examGrid}>
-            {Object.keys(PYQ_DATA).map(exam => (
-              <div key={exam} className={styles.examCard} onClick={() => navigate(`/resources/${exam}`)}>
-                <div className={styles.cardIcon}><FileText size={32} /></div>
-                <h2>{exam}</h2>
-                <p>Download PYQ PDFs</p>
-                <button className={styles.viewBtn}>View Resources</button>
-              </div>
-            ))}
+            {Object.keys(PYQ_DATA).map(exam => {
+              const data = PYQ_DATA[exam];
+              const totalPapers = (data.yearwise?.length || 0) + (data.topicwise?.length || 0);
+              
+              return (
+                <Link 
+                  to={`/resources/${exam}`} 
+                  key={exam} 
+                  className={styles.examCard}
+                  aria-label={`View ${exam} resources`}
+                >
+                  <div className={styles.cardIcon}>
+                    <BookOpen size={32} />
+                  </div>
+                  <div className={styles.cardContent}>
+                    <h2>{exam}</h2>
+                    <span className={styles.badge}>{totalPapers} Resources</span>
+                  </div>
+                  <div className={styles.cardFooter}>
+                    <span>View Papers</span>
+                    <ArrowLeft className={styles.arrowRotate} size={16} />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </>
     );
   }
 
-  // 2. Detail Page View (Exam selected)
-  const currentExamData = PYQ_DATA[examName] || PYQ_DATA['NIMCET']; // Fallback
-  const currentData = currentExamData[viewType];
+  // --- 2. DETAIL PAGE VIEW (Exam selected) ---
+  const formattedExamName = decodeURIComponent(examName);
+  const currentExamData = PYQ_DATA[formattedExamName];
 
-  // Filter functionality for Topic Wise
-  const filteredData = currentData.filter(item => 
+  // 404 Handling
+  if (!currentExamData) {
+    return (
+      <div className={styles.container}>
+         <Helmet><title>Exam Not Found</title></Helmet>
+         <div className={styles.emptyState}>
+            <AlertCircle size={48} color="#e11d48" />
+            <h2>Exam Not Found</h2>
+            <p>We couldn't find resources for "{formattedExamName}".</p>
+            <Link to="/resources" className={styles.backBtn} style={{marginTop: '20px'}}>Back to All Exams</Link>
+         </div>
+      </div>
+    );
+  }
+
+  // Determine availability of data types
+  const hasYearWise = currentExamData.yearwise && currentExamData.yearwise.length > 0;
+  const hasTopicWise = currentExamData.topicwise && currentExamData.topicwise.length > 0;
+
+  // Get current list based on view type
+  const currentList = currentExamData[viewType] || [];
+
+  // Filter functionality
+  const filteredData = currentList.filter(item => 
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <>
       <Helmet>
-        <title>{`${examName} Previous Year Papers | Download PDF`}</title>
-        <meta name="description" content={`Download ${examName} previous year question papers. Available year-wise and topic-wise for better preparation.`} />
+        <title>{`${formatExamTitle(formattedExamName)} Previous Year Papers PDF | Download Free`}</title>
+        <meta name="description" content={`Download ${formattedExamName} previous year question papers PDF. Official papers and topic-wise solutions available for free.`} />
+        <link rel="canonical" href={window.location.origin + location.pathname} />
       </Helmet>
 
       <div className={styles.container}>
@@ -65,45 +135,48 @@ const PYQResourcesPage = () => {
             <ArrowLeft size={18} /> All Exams
           </Link>
           <div className={styles.breadcrumb}>
-            <span>Resources</span> / <span className={styles.activeCrumb}>{examName}</span>
+            <span>Resources</span> / <span className={styles.activeCrumb}>{formattedExamName}</span>
           </div>
         </div>
 
         <div className={styles.header}>
-          <h1>{examName} PYQ Library</h1>
+          <h1>{formattedExamName} Papers</h1>
           
-          {/* Controls: Search and Toggles */}
           <div className={styles.controls}>
-             {viewType === 'topicwise' && (
+             {/* Search Box - Only show if there is data to search */}
+             {currentList.length > 5 && (
               <div className={styles.searchBox}>
                 <Search size={16} className={styles.searchIcon}/>
                 <input 
                   type="text" 
-                  placeholder="Find topic..." 
+                  placeholder="Search papers..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
              )}
 
-            <div className={styles.toggleContainer}>
-              <button 
-                className={`${styles.toggleBtn} ${viewType === 'yearwise' ? styles.active : ''}`}
-                onClick={() => setViewType('yearwise')}
-              >
-                <CalendarDays size={18} /> Year-wise
-              </button>
-              <button 
-                className={`${styles.toggleBtn} ${viewType === 'topicwise' ? styles.active : ''}`}
-                onClick={() => setViewType('topicwise')}
-              >
-                <LayoutGrid size={18} /> Topic-wise
-              </button>
-            </div>
+            {/* Toggle Buttons - Only show if both types exist, otherwise just show label or nothing */}
+            {hasTopicWise && hasYearWise && (
+              <div className={styles.toggleContainer}>
+                <button 
+                  className={`${styles.toggleBtn} ${viewType === 'yearwise' ? styles.active : ''}`}
+                  onClick={() => setViewType('yearwise')}
+                >
+                  <CalendarDays size={18} /> Year-wise
+                </button>
+                <button 
+                  className={`${styles.toggleBtn} ${viewType === 'topicwise' ? styles.active : ''}`}
+                  onClick={() => setViewType('topicwise')}
+                >
+                  <LayoutGrid size={18} /> Topic-wise
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* PDF Grid */}
+        {/* Content Grid */}
         <div className={styles.pdfGrid}>
           {filteredData.length > 0 ? (
             filteredData.map(pdf => (
@@ -114,11 +187,12 @@ const PYQResourcesPage = () => {
                       <FileText className={styles.pdfIcon} size={20} />
                     </div>
                     <div className={styles.textStack}>
-                       <h3>
-                         {pdf.title}
-                         {pdf.isNew && <span className={styles.newBadge}><Sparkles size={10} /> New</span>}
-                       </h3>
-                       {pdf.year && <span className={styles.metaYear}>Year: {pdf.year}</span>}
+                        <h3>
+                          {pdf.title}
+                          {pdf.isNew && <span className={styles.newBadge}><Sparkles size={10} /> New</span>}
+                        </h3>
+                        {pdf.year && <span className={styles.metaYear}>{pdf.year} Official Paper</span>}
+                        {!pdf.year && <span className={styles.metaTopic}>Topic Wise PDF</span>}
                     </div>
                   </div>
                   <a href={pdf.url} target="_blank" rel="noopener noreferrer" className={styles.downloadBtn}>
@@ -130,7 +204,10 @@ const PYQResourcesPage = () => {
           ) : (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}><Search size={40} /></div>
-              <p>No resources found matching your criteria.</p>
+              <p>No papers found here yet.</p>
+              {!hasTopicWise && viewType === 'topicwise' && (
+                 <p className={styles.subHint}>Topic-wise papers are coming soon for {formattedExamName}.</p>
+              )}
             </div>
           )}
         </div>
