@@ -28,8 +28,8 @@ function App() {
                 <Route path="report-issue/:id" element={<ReportIssuePage />} />
                 <Route path="articles" element={<ArticleListPage />} />
                 <Route path="articles/:slug" element={<SinglePostPage />} />
-                <Route path="/resources" element={<PYQResourcesPage />} />
-                <Route path="/resources/:examName" element={<PYQResourcesPage />} />
+                <Route path="resources" element={<PYQResourcesPage />} />
+                <Route path="resources/:examName" element={<PYQResourcesPage />} />
             </Route>
              {/* Any other URL that doesn't match will be redirected to the public homepage */}
             <Route path="*" element={<Navigate to="/" />} />

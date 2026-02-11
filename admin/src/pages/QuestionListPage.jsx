@@ -143,6 +143,7 @@ const QuestionListPage = () => {
           <select name="exam" value={filters.exam} onChange={handleFilterChange}>
             <option value="">All Exams</option>
             <option value="NIMCET">NIMCET</option>
+            <option value="IGDTUW"></option>
             <option value="CUET PG">CUET PG</option>
             <option value="JAMIA">JAMIA</option>
             <option value="MAH-CET">MAH-CET</option>

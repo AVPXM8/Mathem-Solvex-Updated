@@ -1,4 +1,4 @@
-// controllers/adminController.js - FINAL VERSION
+// controllers/adminController.js 
 
 // We need axios here to make a request to Google's reCAPTCHA server
 const axios = require('axios'); 

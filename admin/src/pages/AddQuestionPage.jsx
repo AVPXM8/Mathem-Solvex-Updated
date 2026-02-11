@@ -141,6 +141,7 @@ const AddQuestionPage = () => {
                             <option value="CUET PG">CUET PG</option>
                             <option value="MAH-CET">MAH-CET</option>
                             <option value="JAMIA">JAMIA</option>
+                            <option value="IGDTUW">IGDTUW</option>
                             <option value="JEE">JEE</option>
                             <option value="NDA">NDA</option>
                         </select>
