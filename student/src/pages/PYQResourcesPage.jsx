@@ -180,7 +180,7 @@ const PYQResourcesPage = () => {
         <div className={styles.pdfGrid}>
           {filteredData.length > 0 ? (
             filteredData.map(pdf => (
-              <div key={pdf.id} className={styles.pdfCard}>
+              <div key={pdf.id} className={`${styles.pdfCard} ${pdf.isSpecial ? styles.specialCard : ''}`}>
                 <div className={styles.pdfInfo}>
                   <div className={styles.pdfTitleWrapper}>
                     <div className={styles.iconBox}>
@@ -193,10 +193,12 @@ const PYQResourcesPage = () => {
                         </h3>
                         {pdf.year && <span className={styles.metaYear}>{pdf.year} Official Paper</span>}
                         {!pdf.year && <span className={styles.metaTopic}>Topic Wise PDF</span>}
+                        {pdf.description && <p className={styles.pdfDescription}>{pdf.description}</p>}
                     </div>
                   </div>
-                  <a href={pdf.url} target="_blank" rel="noopener noreferrer" className={styles.downloadBtn}>
-                    <Download size={16} /> <span>Open PDF</span>
+                  <a href={pdf.url} target={pdf.openInSamePage ? "_self" : "_blank"} rel="noopener noreferrer" className={styles.downloadBtn}>
+                    {pdf.openInSamePage ? <BookOpen size={16} /> : <Download size={16} />} 
+                    <span>{pdf.openInSamePage ? "Open Paper" : "Open PDF"}</span>
                   </a>
                 </div>
               </div>

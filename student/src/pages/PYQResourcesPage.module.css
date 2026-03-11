@@ -274,6 +274,53 @@
   transform: translateY(-2px);
 }
 
+.specialCard {
+  border: 2px solid #818cf8;
+  background: linear-gradient(135deg, #ffffff 0%, #eef2ff 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1), 0 4px 6px -2px rgba(79, 70, 229, 0.05);
+}
+
+.specialCard:hover {
+  border-color: #6366f1;
+  box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.15), 0 10px 10px -5px rgba(79, 70, 229, 0.1);
+  transform: translateY(-4px);
+}
+
+.specialCard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: #4f46e5;
+}
+
+.specialCard .iconBox {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.specialCard .downloadBtn {
+  background: #4f46e5;
+  color: white;
+  border: none;
+}
+
+.specialCard .downloadBtn:hover {
+  background: #4338ca;
+  box-shadow: 0 4px 10px rgba(67, 56, 202, 0.3);
+}
+
+.pdfDescription {
+  font-size: 0.95rem;
+  color: #475569;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  line-height: 1.5;
+  max-width: 90%;
+}
+
+
 .pdfInfo {
   display: flex;
   justify-content: space-between;
