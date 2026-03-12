@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // --- Import All Page Components ---
 import HomePage from './pages/HomePage';
@@ -11,6 +12,8 @@ import ArticleListPage from './pages/ArticleListPage';
 import SinglePostPage from './pages/SinglePostPage';
 import ResultsPage from './pages/ResultsPage';
 import PYQResourcesPage from './pages/PYQResourcesPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
 // --- Import Layout Components ---
 import PublicLayout from './components/PublicLayout';
 
@@ -18,22 +21,26 @@ import PublicLayout from './components/PublicLayout';
 function App() {
   return (
     <HelmetProvider>
-        <Routes>
-            {/* === Public Routes (for students) === */}
-            <Route path="/" element={<PublicLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="/results" element={<ResultsPage />} />
-                <Route path="questions" element={<QuestionLibraryPage />} />
-                <Route path="question/:id" element={<SingleQuestionPage />} />
-                <Route path="report-issue/:id" element={<ReportIssuePage />} />
-                <Route path="articles" element={<ArticleListPage />} />
-                <Route path="articles/:slug" element={<SinglePostPage />} />
-                <Route path="resources" element={<PYQResourcesPage />} />
-                <Route path="resources/:examName" element={<PYQResourcesPage />} />
-            </Route>
-             {/* Any other URL that doesn't match will be redirected to the public homepage */}
-            <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+      <SpeedInsights />
+      <Routes>
+        {/* === Public Routes (for students) === */}
+
+        <Route path="/" element={<PublicLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="/results" element={<ResultsPage />} />
+          <Route path="questions" element={<QuestionLibraryPage />} />
+          <Route path="question/:id" element={<SingleQuestionPage />} />
+          <Route path="report-issue/:id" element={<ReportIssuePage />} />
+          <Route path="articles" element={<ArticleListPage />} />
+          <Route path="articles/:slug" element={<SinglePostPage />} />
+          <Route path="resources" element={<PYQResourcesPage />} />
+          <Route path="resources/:examName" element={<PYQResourcesPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="contact" element={<ContactPage />} />
+        </Route>
+        {/* Any other URL that doesn't match will be redirected to the public homepage */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </HelmetProvider>
   );
 }
