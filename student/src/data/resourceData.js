@@ -1,4 +1,4 @@
-// import cuet2026Paper from './CUET PG-2026 PAPER.pdf';
+import cuet2026Paper from './CUET PG-2026 PAPER.pdf';
 
 export const PYQ_DATA = {
   NIMCET: {
