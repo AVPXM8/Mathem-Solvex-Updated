@@ -45,8 +45,8 @@ const Footer = () => {
           <ul>
             <li><Link to="/">Home</Link></li>
             <li><Link to="/articles">Blog</Link></li>
-            <li><a href="https://www.maarula.in/about" target="_blank" rel="noopener noreferrer">About</a></li>
-            <li><a href="https://www.maarula.in/contact-us" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+            <li><Link to="/about">About</Link></li>
+            <li><Link to="/contact">Contact Us</Link></li>
             <li><a href="https://maarula.in/faculty" target="_blank" rel="noopener noreferrer">Faculty</a></li>
           </ul>
         </div>

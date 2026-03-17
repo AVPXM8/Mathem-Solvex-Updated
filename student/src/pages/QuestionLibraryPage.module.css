@@ -146,6 +146,46 @@
   border: 1px solid var(--border-color);
   transition: all var(--transition-speed) ease;
 }
+
+/* [NEW] PYQ Promo */
+.pyqPromo {
+  background: linear-gradient(135deg, #f97316, #eab308);
+  border-radius: var(--border-radius-md);
+  padding: 30px 20px;
+  margin: 40px auto 0;
+  max-width: 600px;
+  color: white;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.pyqPromo h3 {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.pyqPromo p {
+  margin: 0 0 20px;
+  font-size: 1rem;
+  opacity: 0.95;
+}
+.pyqPromoBtn {
+  display: inline-block;
+  background-color: white;
+  color: var(--brand-orange-dark);
+  padding: 12px 24px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+.pyqPromoBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
 .faq {
   margin-top: 50px;
   padding-top: 40px;

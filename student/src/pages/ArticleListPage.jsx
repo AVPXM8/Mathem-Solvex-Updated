@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { Helmet } from 'react-helmet-async';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './ArticleListPage.module.css';
 
 // Safe excerpt builder (client-side)
@@ -20,20 +21,31 @@ const FALLBACK_IMAGE =
   'https://res.cloudinary.com/dwmj6up6j/image/upload/f_auto,q_auto,w_1200/v1752687380/rqtljy0wi1uzq3itqxoe.png';
 
 const SITE_ORIGIN = 'https://question.maarula.in';
+const POSTS_PER_PAGE = 12;
 
 const ArticleListPage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Fetch all posts (uses your existing endpoint)
+  // Pagination state
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+
+  // Fetch posts with pagination
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/posts'); // no change to your API
-        // Accept array or {posts: []}
-        const data = Array.isArray(res.data) ? res.data : res.data?.posts || [];
-        setPosts(data);
+        const res = await api.get('/posts', {
+          params: { page: currentPage, limit: POSTS_PER_PAGE }
+        });
+        const data = res.data;
+        // Backend returns { posts, total, page, totalPages }
+        setPosts(Array.isArray(data.posts) ? data.posts : (Array.isArray(data) ? data : []));
+        setTotalPosts(data.total || 0);
+        setTotalPages(data.totalPages || 1);
       } catch (err) {
         console.error('Failed to fetch posts', err);
         setPosts([]);
@@ -42,11 +54,56 @@ const ArticleListPage = () => {
       }
     };
     fetchPosts();
-  }, []);
+    // Scroll to top on page change
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
-  // Feature the newest post (first), list the rest
-  const featured = posts[0];
-  const others = posts.slice(1);
+  // Page navigation
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('page', String(page));
+      setSearchParams(newParams);
+    }
+  };
+
+  // Feature the newest post (page 1 only), list the rest
+  const isFirstPage = currentPage === 1;
+  const featured = isFirstPage ? posts[0] : null;
+  const gridPosts = isFirstPage ? posts.slice(1) : posts;
+
+  // Generate page buttons with ellipses
+  const renderPageButtons = () => {
+    const pages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, currentPage + 2);
+
+    if (currentPage <= 3) end = Math.min(totalPages, maxVisible);
+    if (currentPage > totalPages - 3) start = Math.max(1, totalPages - maxVisible + 1);
+
+    if (start > 1) {
+      pages.push(
+        <button key={1} onClick={() => goToPage(1)} className={`${styles.pageBtn} ${currentPage === 1 ? styles.activePageBtn : ''}`}>1</button>
+      );
+      if (start > 2) pages.push(<span key="sep-s" className={styles.ellipsis}>…</span>);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(
+        <button key={i} onClick={() => goToPage(i)} className={`${styles.pageBtn} ${currentPage === i ? styles.activePageBtn : ''}`} disabled={loading}>{i}</button>
+      );
+    }
+
+    if (end < totalPages) {
+      if (end < totalPages - 1) pages.push(<span key="sep-e" className={styles.ellipsis}>…</span>);
+      pages.push(
+        <button key={totalPages} onClick={() => goToPage(totalPages)} className={`${styles.pageBtn} ${currentPage === totalPages ? styles.activePageBtn : ''}`}>{totalPages}</button>
+      );
+    }
+
+    return pages;
+  };
 
   // JSON-LD: Breadcrumbs
   const breadcrumbSchema = {
@@ -58,11 +115,11 @@ const ArticleListPage = () => {
     ],
   };
 
-  // JSON-LD: ItemList of articles + Blog (helps AI Overviews/Discover)
+  // JSON-LD: ItemList
   const itemListSchema = useMemo(() => {
     const list = posts.map((p, i) => ({
       '@type': 'ListItem',
-      position: i + 1,
+      position: (currentPage - 1) * POSTS_PER_PAGE + i + 1,
       url: `${SITE_ORIGIN}/articles/${p.slug}`,
       name: p.title,
     }));
@@ -70,10 +127,10 @@ const ArticleListPage = () => {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
       itemListOrder: 'http://schema.org/ItemListUnordered',
-      numberOfItems: posts.length,
+      numberOfItems: totalPosts,
       itemListElement: list,
     };
-  }, [posts]);
+  }, [posts, currentPage, totalPosts]);
 
   const blogSchema = useMemo(() => {
     const items = posts.slice(0, 12).map(p => ({
@@ -103,12 +160,12 @@ const ArticleListPage = () => {
   return (
     <div className={styles.container}>
       <Helmet>
-        <title>Articles & Exam News | Maarula Classes</title>
+        <title>{currentPage > 1 ? `Page ${currentPage} | ` : ''}Articles & Exam News | Maarula Classes</title>
         <meta
           name="description"
           content="Latest exam updates, strategy guides, and insights for NIMCET, CUET-PG, and other MCA entrances from Maarula Classes."
         />
-        <link rel="canonical" href={`${SITE_ORIGIN}/articles`} />
+        <link rel="canonical" href={`${SITE_ORIGIN}/articles${currentPage > 1 ? `?page=${currentPage}` : ''}`} />
 
         {/* Open Graph / Twitter */}
         <meta property="og:title" content="Latest Articles & Exam News for MCA Aspirants" />
@@ -144,7 +201,7 @@ const ArticleListPage = () => {
       {/* Loading */}
       {loading && <div className={styles.loader}>Loading articles…</div>}
 
-      {/* Featured article */}
+      {/* Featured article (page 1 only) */}
       {!loading && featured && (
         <Link
           to={`/articles/${featured.slug}`}
@@ -172,9 +229,9 @@ const ArticleListPage = () => {
       )}
 
       {/* Article grid */}
-      {!loading && others.length > 0 && (
+      {!loading && gridPosts.length > 0 && (
         <section aria-label="More articles" className={styles.postGrid}>
-          {others.map(post => (
+          {gridPosts.map(post => (
             <Link
               to={`/articles/${post.slug}`}
               key={post._id}
@@ -201,6 +258,33 @@ const ArticleListPage = () => {
             </Link>
           ))}
         </section>
+      )}
+
+      {/* Pagination */}
+      {!loading && totalPages > 1 && (
+        <nav className={styles.pagination} aria-label="Article pagination">
+          <button
+            className={styles.paginationArrow}
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={20} /> Prev
+          </button>
+
+          <div className={styles.pageNumbers}>
+            {renderPageButtons()}
+          </div>
+
+          <button
+            className={styles.paginationArrow}
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            aria-label="Next page"
+          >
+            Next <ChevronRight size={20} />
+          </button>
+        </nav>
       )}
 
       {/* Empty state */}

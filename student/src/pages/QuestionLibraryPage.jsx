@@ -613,6 +613,14 @@ const QuestionLibraryPage = () => {
           <li>The Good news is that everything you will get at no cost as everyhting is free.</li>
         </ul>
 
+        <div className={styles.pyqPromo}>
+          <h3>Want to solve complete papers at once?</h3>
+          <p>Experience the actual exam environment with our interactive full-length PYQ paper viewer.</p>
+          <Link to="/resources" className={styles.pyqPromoBtn}>
+            Explore Year-wise Full Papers
+          </Link>
+        </div>
+
         <nav className={styles.hubNav} aria-label="Browse by category">
           <ul>
             <li><Link to="/questions?exam=NIMCET">NIMCET PYQs</Link></li>

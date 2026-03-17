@@ -94,9 +94,17 @@ export default function SingleQuestionPage() {
 
   /* ----------------------------- keyboard shortcuts ----------------------------- */
   useEffect(() => {
+    // const onKey = (e) => {
+    //   const k = e.key.toLowerCase();
+    //   if (!question) return;
     const onKey = (e) => {
-      const k = e.key.toLowerCase();
-      if (!question) return;
+    // Ignore shortcuts when user is typing in AI chat input or any input/textarea
+    const tag = e.target.tagName.toLowerCase();
+    const isTyping = tag === 'input' || tag === 'textarea' || e.target.isContentEditable;
+    if (isTyping) return;
+
+    const k = e.key.toLowerCase();
+    if (!question) return;
 
       if (['1','2','3','4'].includes(k)) {
         const idx = Number(k) - 1;
@@ -286,7 +294,9 @@ export default function SingleQuestionPage() {
                 decoding="async"
               />
             )}
-            <AITutor questionId={question._id} />
+            {/* <AITutor questionId={question._id} /> */}
+            <AITutor questionId={question._id} question={question} />
+
             <h3 className={styles.optionsHeader}>Choose the correct answer:</h3>
 
             <div className={styles.optionsGrid}>

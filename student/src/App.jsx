@@ -12,6 +12,7 @@ import ArticleListPage from './pages/ArticleListPage';
 import SinglePostPage from './pages/SinglePostPage';
 import ResultsPage from './pages/ResultsPage';
 import PYQResourcesPage from './pages/PYQResourcesPage';
+import FullPaperViewPage from './pages/FullPaperViewPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 // --- Import Layout Components ---
@@ -35,6 +36,7 @@ function App() {
           <Route path="articles/:slug" element={<SinglePostPage />} />
           <Route path="resources" element={<PYQResourcesPage />} />
           <Route path="resources/:examName" element={<PYQResourcesPage />} />
+          <Route path="paper/:examName/:year" element={<FullPaperViewPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
         </Route>

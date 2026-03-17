@@ -66,6 +66,7 @@ export const PYQ_DATA = {
         openInSamePage: true,
         description: "The most awaited CUET PG 2026 Official Paper is here! This is the absolute best paper to practice right now to understand the latest patterns and verify your preparation."
       },
+       { id: 'cp26', title: 'CUET PG 2026 Official Paper', year: '2026', url: 'https://res.cloudinary.com/dph6urjjf/image/upload/v1773390874/CUET_PG-2026_PAPER_doqewp.pdf', isNew: true },
       { id: 'cp25', title: 'CUET PG 2025 Official Paper', year: '2025', url: 'https://res.cloudinary.com/dph6urjjf/image/upload/v1772069538/CUET-PG_2025_OFFICIAL_PAPER_q6vrbr.pdf', isNew: true },
       { id: 'cp24', title: 'CUET PG 2024 Official Paper', year: '2024', url: 'https://res.cloudinary.com/dph6urjjf/image/upload/v1772069543/CUET-PG_2024_OFFICIAL_PAPER_m6pju7.pdf', isNew: true },
       { id: 'cp23', title: 'CUET PG 2023 Official Paper', year: '2023', url: 'https://res.cloudinary.com/dph6urjjf/image/upload/v1772069541/CUET-PG_2023_OFFICIAL_PAPER_xtmz5n.pdf' },

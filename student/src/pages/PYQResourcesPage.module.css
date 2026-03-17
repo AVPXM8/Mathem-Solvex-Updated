@@ -423,6 +423,37 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+.cardActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.solveBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f97316, #eab308);
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);
+}
+
+.solveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(249, 115, 22, 0.4);
+}
+
 /* --- Empty State --- */
 .emptyState {
   text-align: center;
@@ -474,16 +505,26 @@
   
   .pdfTitleWrapper { width: 100%; }
   
-  .downloadBtn {
+  .cardActions {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .downloadBtn, .solveBtn {
     width: 100%; /* Full width button for easier tapping */
-    margin-top: 4px;
+    margin-top: 0;
     padding: 12px;
+  }
+  
+  .downloadBtn {
     background-color: #1e293b; /* Primary dark style by default on mobile */
     color: white;
     border-color: #1e293b;
   }
   
-  .downloadBtn:active { transform: scale(0.98); }
+  .downloadBtn:active, .solveBtn:active { transform: scale(0.98); }
 
   .textStack h3 { font-size: 1rem; }
 }

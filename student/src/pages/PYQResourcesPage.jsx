@@ -11,7 +11,8 @@ import {
   Search, 
   Sparkles, 
   AlertCircle,
-  BookOpen
+  BookOpen,
+  CheckCircle2
 } from 'lucide-react';
 import { PYQ_DATA } from '../data/resourceData';
 
@@ -196,10 +197,17 @@ const PYQResourcesPage = () => {
                         {pdf.description && <p className={styles.pdfDescription}>{pdf.description}</p>}
                     </div>
                   </div>
-                  <a href={pdf.url} target={pdf.openInSamePage ? "_self" : "_blank"} rel="noopener noreferrer" className={styles.downloadBtn}>
-                    {pdf.openInSamePage ? <BookOpen size={16} /> : <Download size={16} />} 
-                    <span>{pdf.openInSamePage ? "Open Paper" : "Open PDF"}</span>
-                  </a>
+                  <div className={styles.cardActions}>
+                    {pdf.year && (
+                      <Link to={`/paper/${encodeURIComponent(formattedExamName)}/${pdf.year}`} className={styles.solveBtn}>
+                        <CheckCircle2 size={16} /> <span>Solve Paper</span>
+                      </Link>
+                    )}
+                    <a href={pdf.url} target={pdf.openInSamePage ? "_self" : "_blank"} rel="noopener noreferrer" className={styles.downloadBtn}>
+                      {pdf.openInSamePage ? <BookOpen size={16} /> : <Download size={16} />} 
+                      <span>{pdf.openInSamePage ? "Open Paper" : "Open PDF"}</span>
+                    </a>
+                  </div>
                 </div>
               </div>
             ))

@@ -1,11 +1,10 @@
-// middleware.mjs (ESM) — Vercel middleware for Vite SPA + Prerender.io
-// Note the .mjs extension and ESM syntax (import/export)
+
 import { next } from '@vercel/functions';
 
 const BOT_UAS = [
-  'googlebot','bingbot','yandex','baiduspider','facebookexternalhit',
-  'twitterbot','linkedinbot','slackbot','discordbot','redditbot','applebot',
-  'qwantify','whatsapp'
+  'googlebot', 'bingbot', 'yandex', 'baiduspider', 'facebookexternalhit',
+  'twitterbot', 'linkedinbot', 'slackbot', 'discordbot', 'redditbot', 'applebot',
+  'qwantify', 'whatsapp'
 ];
 
 // This config is Vercel platform-specific and works with any framework
