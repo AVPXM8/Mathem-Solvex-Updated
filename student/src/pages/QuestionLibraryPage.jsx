@@ -159,6 +159,68 @@ const FilterFormContent = React.memo(function FilterFormContent({
 });
 
 /* -------------------------------------------------------------------------- */
+/*  EXAM ACCORDION CARD                                                       */
+/* -------------------------------------------------------------------------- */
+const ExamAccordionCard = ({ title, meta, children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className={styles.examCard}>
+      <div 
+        className={styles.examCardHeader} 
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div>
+          <h3>{title}</h3>
+          <div className={styles.examMeta}>
+            {meta}
+          </div>
+        </div>
+        <div className={styles.accordionIconLarge}>
+          {isOpen ? '▲' : '▼'}
+        </div>
+      </div>
+      {isOpen && (
+        <div className={styles.examSections}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  TOPIC ACCORDION CARD                                                      */
+/* -------------------------------------------------------------------------- */
+const TopicAccordionCard = ({ topic, exam, subject }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className={styles.topicCard}>
+      <div className={styles.topicCardTitle} onClick={() => setIsOpen(!isOpen)}>
+        <div className={styles.topicCardTitleContent}>{topic}</div>
+        <div className={styles.accordionIcon}>
+          {isOpen ? '▲' : '▼'}
+        </div>
+      </div>
+      {isOpen && (
+        <div className={styles.testBtnGroup}>
+          {[1, 2, 3, 4, 5, 6].map(testNum => (
+            <Link
+              key={testNum}
+              to={`/test?exam=${encodeURIComponent(exam)}${subject ? `&subject=${encodeURIComponent(subject)}` : ''}&topic=${encodeURIComponent(topic)}&page=${testNum}&limit=20`}
+              className={styles.testBtn}
+            >
+              Test {testNum}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
 /*                               PAGE COMPONENT                                */
 /* -------------------------------------------------------------------------- */
 const QuestionLibraryPage = () => {
@@ -624,7 +686,7 @@ const QuestionLibraryPage = () => {
         <nav className={styles.hubNav} aria-label="Browse by category">
           <ul>
             <li><Link to="/questions?exam=NIMCET">NIMCET PYQs</Link></li>
-            <li><Link to="/questions?exam=CUET-PG">CUET-PG PYQs</Link></li>
+            <li><Link to="/questions?exam=CUET PG">CUET PG PYQs</Link></li>
             <li><Link to="/questions?subject=Mathematics">Mathematics</Link></li>
             <li><Link to="/questions?subject=Computer">Computer Science</Link></li>
             <li><Link to="/questions?subject=English">English</Link></li>
@@ -633,6 +695,161 @@ const QuestionLibraryPage = () => {
           </ul>
         </nav>
       </section>
+
+      {/* ─── Topic-wise Practice Cards with Marks & Time ─── */}
+      <section className={styles.topicSection}>
+        <div className={styles.topicContainer}>
+          <h2 className={styles.topicSectionTitle}>Practice by Exam & Topic</h2>
+          <p className={styles.topicSectionSub}>Jump directly into topic-wise PYQs with exam details — marks, time, and negative marking.</p>
+
+          {/* NIMCET Exam Card */}
+          <ExamAccordionCard 
+            title="NIMCET — NIT MCA Common Entrance Test"
+            meta={
+              <>
+                <span className={styles.metaBadge}>🕐 120 Minutes</span>
+                <span className={styles.metaBadge}>📝 120 Questions</span>
+                <span className={styles.metaBadge}>🏆 1000 Marks</span>
+                <span className={`${styles.metaBadge} ${styles.metaNeg}`}>⚠️ Negative Marking: 1/4th deduction</span>
+              </>
+            }
+          >
+              {/* Part I — Mathematics */}
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeader2}>
+                  <h4>Part I — Mathematics</h4>
+                  <div className={styles.sectionMeta}>
+                    <span>50 Qs</span><span>+12 / −3</span><span>70 min</span><span>600 marks</span>
+                  </div>
+                </div>
+                <div className={styles.topicCardGrid}>
+                  {[
+                    'Calculus', 'Algebra', 'Matrices', 'Determinants', 'Probability', 'Statistics',
+                    'Trigonometry', 'Coordinate Geometry', 'Differential Equations', 'Integration',
+                    'Sequences & Series', 'Set Theory', 'Relations & Functions', 'Limits & Continuity',
+                    'Complex Numbers', 'Binomial Theorem', 'Straight Lines', 'Circles', 'Conic Sections',
+                    'Vectors', '3D Geometry', 'Permutations & Combinations', 'Mathematical Induction',
+                    'Quadratic Equations', 'Logarithms'
+                  ].map(topic => <TopicAccordionCard key={topic} topic={topic} exam="NIMCET" subject="Mathematics" />)}
+                </div>
+              </div>
+
+              {/* Part II — Analytical Ability & Logical Reasoning */}
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeader2}>
+                  <h4>Part II — Analytical Ability & Logical Reasoning</h4>
+                  <div className={styles.sectionMeta}>
+                    <span>40 Qs</span><span>+6 / −1.5</span><span>30 min</span><span>240 marks</span>
+                  </div>
+                </div>
+                <div className={styles.topicCardGrid}>
+                  {[
+                    'Coding-Decoding', 'Blood Relations', 'Syllogisms', 'Arrangements',
+                    'Puzzles', 'Data Interpretation', 'Number Series', 'Analogies',
+                    'Direction Sense', 'Seating Arrangement', 'Data Sufficiency', 'Venn Diagrams'
+                  ].map(topic => <TopicAccordionCard key={topic} topic={topic} exam="NIMCET" subject="Logical Reasoning" />)}
+                </div>
+              </div>
+
+              {/* Part III — Computer Awareness */}
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeader2}>
+                  <h4>Part III — Computer Awareness</h4>
+                  <div className={styles.sectionMeta}>
+                    <span>20 Qs</span><span>+6 / −1.5</span><span>20 min</span><span>120 marks</span>
+                  </div>
+                </div>
+                <div className={styles.topicCardGrid}>
+                  {[
+                    'Data Structures', 'Algorithms', 'DBMS', 'Operating Systems',
+                    'Computer Networks', 'C Programming', 'Boolean Algebra', 'Number Systems',
+                    'Digital Logic', 'Computer Architecture'
+                  ].map(topic => <TopicAccordionCard key={topic} topic={topic} exam="NIMCET" subject="Computer" />)}
+                </div>
+              </div>
+
+              {/* Part III — General English */}
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeader2}>
+                  <h4>Part III — General English</h4>
+                  <div className={styles.sectionMeta}>
+                    <span>10 Qs</span><span>+4 / −1</span><span>20 min</span><span>40 marks</span>
+                  </div>
+                </div>
+                <div className={styles.topicCardGrid}>
+                  {[
+                    'Reading Comprehension', 'Grammar', 'Vocabulary', 'Sentence Correction',
+                    'Fill in the Blanks', 'Synonyms & Antonyms', 'Idioms & Phrases',
+                    'Error Spotting'
+                  ].map(topic => <TopicAccordionCard key={topic} topic={topic} exam="NIMCET" subject="English" />)}
+                </div>
+              </div>
+          </ExamAccordionCard>
+
+          {/* CUET PG Exam Card */}
+          <ExamAccordionCard 
+            title="CUET PG — Common University Entrance Test (MCA)"
+            meta={
+              <>
+                <span className={styles.metaBadge}>🕐 75 Minutes</span>
+                <span className={styles.metaBadge}>📝 75 Questions</span>
+                <span className={styles.metaBadge}>🏆 300 Marks</span>
+                <span className={styles.metaBadge}>✅ +4 per correct</span>
+                <span className={`${styles.metaBadge} ${styles.metaNeg}`}>⚠️ −1 per wrong</span>
+              </>
+            }
+          >
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeader2}>
+                  <h4>Mathematics</h4>
+                  <div className={styles.sectionMeta}>
+                    <span>+4 / −1</span>
+                  </div>
+                </div>
+                <div className={styles.topicCardGrid}>
+                  {[
+                    'Calculus', 'Algebra', 'Matrices', 'Probability', 'Statistics',
+                    'Coordinate Geometry', 'Differential Equations', 'Trigonometry',
+                    'Set Theory', 'Number Theory', 'Linear Programming', 'Sequences & Series'
+                  ].map(topic => <TopicAccordionCard key={topic} topic={topic} exam="CUET PG" subject="Mathematics" />)}
+                </div>
+              </div>
+
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeader2}>
+                  <h4>Computer Science</h4>
+                  <div className={styles.sectionMeta}>
+                    <span>+4 / −1</span>
+                  </div>
+                </div>
+                <div className={styles.topicCardGrid}>
+                  {[
+                    'Data Structures', 'Algorithms', 'DBMS', 'Operating Systems',
+                    'Computer Networks', 'C Programming', 'Software Engineering',
+                    'Theory of Computation', 'Compiler Design', 'Boolean Algebra',
+                    'Digital Logic', 'Computer Architecture'
+                  ].map(topic => <TopicAccordionCard key={topic} topic={topic} exam="CUET PG" subject="Computer" />)}
+                </div>
+              </div>
+
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeader2}>
+                  <h4>Reasoning & English</h4>
+                  <div className={styles.sectionMeta}>
+                    <span>+4 / −1</span>
+                  </div>
+                </div>
+                <div className={styles.topicCardGrid}>
+                  {[
+                    'Logical Reasoning', 'Analytical Ability', 'Data Interpretation',
+                    'Reading Comprehension', 'Grammar', 'Vocabulary'
+                  ].map(topic => <TopicAccordionCard key={topic} topic={topic} exam="CUET PG" subject="" />)}
+                </div>
+              </div>
+          </ExamAccordionCard>
+        </div>
+      </section>
+
 
       {/* Mobile overlay + sidebar */}
       {isFilterOpen && (

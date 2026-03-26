@@ -13,6 +13,7 @@ import SinglePostPage from './pages/SinglePostPage';
 import ResultsPage from './pages/ResultsPage';
 import PYQResourcesPage from './pages/PYQResourcesPage';
 import FullPaperViewPage from './pages/FullPaperViewPage';
+import TestEnvironmentPage from './pages/TestEnvironmentPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 // --- Import Layout Components ---
@@ -37,6 +38,7 @@ function App() {
           <Route path="resources" element={<PYQResourcesPage />} />
           <Route path="resources/:examName" element={<PYQResourcesPage />} />
           <Route path="paper/:examName/:year" element={<FullPaperViewPage />} />
+          <Route path="test" element={<TestEnvironmentPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
         </Route>

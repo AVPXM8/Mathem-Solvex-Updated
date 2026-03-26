@@ -5,20 +5,34 @@
 }
 
 /* 16:9 wrapper so every slide is exactly the same height */
+/* Use a standard aspect ratio but ensure no cropping */
 .aspectBox{
   position:relative;
   width:100%;
-  aspect-ratio:16 / 9;     /* keeps a stable LCP + no layout shift */
-  background:#fff7ed;      /* light brand-friendly backdrop for letterboxing */
+  aspect-ratio: 16 / 7;    /* Slightly wider than 16:9 for a modern look */
+  background:#fff7ed;
+  overflow:hidden;
 }
 
-/* Show entire banner without cropping */
+@media (max-width: 1024px) {
+  .aspectBox {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 768px) {
+  .aspectBox {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* Ensure the full banner is visible */
 .bannerImage{
   position:absolute;
   inset:0;
   width:100%;
   height:100%;
-  object-fit:contain;      /* no cropping; full banner visible */
+  object-fit:contain;    /* Avoid cropping! Full banner will be visible */
   object-position:center;
   display:block;
 }

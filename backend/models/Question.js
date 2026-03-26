@@ -38,9 +38,13 @@ const QuestionSchema = new mongoose.Schema({
         required: [true, 'Topic is required'],
         trim: true
     },
+    questionType: {
+        type: String,
+        enum: ['PYQ', 'Important', 'Practice'],
+        default: 'PYQ'
+    },
     year: {
         type: Number,
-        required: [true, 'Year is required'],
         min: [1900, 'Year must be at least 1900'],
         max: [new Date().getFullYear(), 'Year cannot be in the future']
     },

@@ -252,6 +252,28 @@
   font-size: 1.2rem;
 }
 
+.divider {
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 5px 0;
+}
+
+.specialLink {
+  color: #f97316 !important; /* Brand orange */
+  font-weight: 700 !important;
+}
+
+.specialLink:hover {
+  background-color: #fff7ed !important;
+}
+
+.mobileDivider {
+  width: 80%;
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 10px 0;
+}
+
 @media (max-width: 768px) {
     .topBar {
         display: none;

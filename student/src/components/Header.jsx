@@ -64,6 +64,9 @@ const Header = () => {
               <Link to="/questions?exam=MAH-CET">MAH-CET</Link>
               <Link to="/questions?exam=AMU">AMU</Link>
               <Link to="/questions?exam=VITMEE">VITMEE</Link>
+              <div className={styles.divider}></div>
+              <Link to="/resources" className={styles.specialLink}>PYQ Paper Downloads</Link>
+              <Link to="/test" className={styles.specialLink}>Practice Paper</Link>
             </div>
           </div>
           
@@ -102,7 +105,10 @@ const Header = () => {
           <MobileNavLink to="/questions?exam=MAH-CET">MAH-CET PYQs</MobileNavLink>
           <MobileNavLink to="/questions?exam=AMU">AMU PYQs</MobileNavLink>
           <MobileNavLink to="/questions?exam=VITMEE">VITMEE PYQs</MobileNavLink>
-          <MobileNavLink to="/resources">PYQ PDF Downloads</MobileNavLink>
+          <div className={styles.mobileDivider}></div>
+          <MobileNavLink to="/resources">PYQ Paper Downloads</MobileNavLink>
+          <MobileNavLink to="/test">Practice Paper</MobileNavLink>
+          <div className={styles.mobileDivider}></div>
           <MobileNavLink to="/articles">Latest Update</MobileNavLink>
           <a href="https://maarulaclasses.classx.co.in/new-courses" target="_blank" rel="noopener noreferrer" onClick={closeMobileMenu}>Our Courses</a>
           <a href="https://maarulaclasses.classx.co.in/test-series" target="_blank" rel="noopener noreferrer" onClick={closeMobileMenu}>Test Series</a>

@@ -1,6 +1,6 @@
 /* ============================================================
    AboutPage.module.css — Mathem Solvex About Page Styles
-   Palette: #4f46e5 indigo, #1e293b dark, #ffc107 amber, #f97316 orange
+   Palette: #f97316 orange brand, #1e293b dark navy
    ============================================================ */
 
 .container {
@@ -23,8 +23,8 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 30% 50%, rgba(79, 70, 229, 0.25) 0%, transparent 60%),
-              radial-gradient(ellipse at 70% 20%, rgba(124, 58, 237, 0.2) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 30% 50%, rgba(249, 115, 22, 0.2) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 20%, rgba(234, 88, 12, 0.15) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .brand {
-  background: linear-gradient(90deg, #818cf8, #c084fc);
+  background: linear-gradient(90deg, #fb923c, #fbbf24);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -77,7 +77,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #f97316, #ea580c);
   color: white;
   padding: 13px 28px;
   border-radius: 10px;
@@ -85,12 +85,12 @@
   font-weight: 600;
   font-size: 1rem;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.35);
 }
 
 .primaryBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.45);
+  box-shadow: 0 14px 28px rgba(249, 115, 22, 0.45);
 }
 
 .secondaryBtn {
@@ -140,8 +140,8 @@
 
 .label {
   display: inline-block;
-  background: #eef2ff;
-  color: #4f46e5;
+  background: #fff7ed;
+  color: #ea580c;
   padding: 5px 14px;
   border-radius: 30px;
   font-size: 0.82rem;
@@ -181,6 +181,24 @@
   font-size: 1rem;
 }
 
+/* ---------- FOUNDER LINK ---------- */
+.founderLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #f97316;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-top: 8px;
+  transition: color 0.2s, gap 0.2s;
+}
+.founderLink:hover {
+  color: #ea580c;
+  gap: 12px;
+}
+
+/* ---------- STATS ---------- */
 .statsBlock {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -205,7 +223,7 @@
   display: block;
   font-size: 2.2rem;
   font-weight: 800;
-  color: #4f46e5;
+  color: #f97316;
   line-height: 1;
   margin-bottom: 8px;
 }
@@ -239,19 +257,19 @@
 
 .featureCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.1);
-  border-color: #c7d2fe;
+  box-shadow: 0 12px 30px rgba(249, 115, 22, 0.1);
+  border-color: #fed7aa;
 }
 
 .featureIcon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #eef2ff, #ede9fe);
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4f46e5;
+  color: #f97316;
   margin-bottom: 20px;
 }
 
@@ -281,8 +299,8 @@
   color: #94a3b8;
 }
 .examsSection .label {
-  background: rgba(255,255,255,0.1);
-  color: #a5b4fc;
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
 }
 
 .examsGrid {
@@ -307,7 +325,7 @@
 
 .examChip:hover {
   background: rgba(255,255,255,0.12);
-  border-color: var(--chip-color, #4f46e5);
+  border-color: var(--chip-color, #f97316);
   transform: translateX(4px);
 }
 
@@ -315,7 +333,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--chip-color, #4f46e5);
+  background: var(--chip-color, #f97316);
   flex-shrink: 0;
 }
 
@@ -341,7 +359,7 @@
 }
 
 .examChip:hover .chipArrow {
-  color: var(--chip-color, #4f46e5);
+  color: var(--chip-color, #f97316);
   transform: translateX(3px);
 }
 
@@ -352,14 +370,14 @@
 }
 
 .freeBanner {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 24px;
   padding: 56px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 40px;
   align-items: center;
-  box-shadow: 0 20px 50px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 20px 50px rgba(249, 115, 22, 0.3);
   color: white;
 }
 
@@ -425,7 +443,7 @@
 .coursesBtn {
   display: inline-block;
   background: white;
-  color: #4f46e5;
+  color: #ea580c;
   font-weight: 700;
   padding: 12px 24px;
   border-radius: 10px;
@@ -453,7 +471,7 @@
 }
 
 .missionIcon {
-  color: #4f46e5;
+  color: #f97316;
   margin-bottom: 20px;
 }
 
@@ -479,12 +497,12 @@
 }
 
 .missionActions .secondaryBtn {
-  color: #4f46e5;
-  border-color: #c7d2fe;
-  background: #eef2ff;
+  color: #f97316;
+  border-color: #fed7aa;
+  background: #fff7ed;
 }
 
 .missionActions .secondaryBtn:hover {
-  background: #e0e7ff;
-  border-color: #818cf8;
+  background: #ffedd5;
+  border-color: #fb923c;
 }

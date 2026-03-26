@@ -199,7 +199,7 @@ const PYQResourcesPage = () => {
                   </div>
                   <div className={styles.cardActions}>
                     {pdf.year && (
-                      <Link to={`/paper/${encodeURIComponent(formattedExamName)}/${pdf.year}`} className={styles.solveBtn}>
+                      <Link to={`/test?exam=${encodeURIComponent(formattedExamName)}&year=${pdf.year}`} className={styles.solveBtn}>
                         <CheckCircle2 size={16} /> <span>Solve Paper</span>
                       </Link>
                     )}

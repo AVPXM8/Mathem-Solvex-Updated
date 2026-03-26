@@ -1,5 +1,5 @@
 
-import React, { lazy, Suspense, useMemo } from "react";
+import React, { lazy, Suspense, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import styles from "./HomePage.module.css";
@@ -14,6 +14,37 @@ const AwardCarousel  = lazy(() => import("../components/AwardCarousel"));
 
 const SITE_URL = "https://question.maarula.in";
 
+function RevealSection({ children, className = "" }) {
+  const sectionRef = useRef(null);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add(styles.revealVisible);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div ref={sectionRef} className={`${styles.reveal} ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 export default function HomePage() {
   // Top 8 from 2025 (stable sort that tolerates missing numbers)
   const homepageStudents = useMemo(() => {
@@ -26,79 +57,8 @@ export default function HomePage() {
   }, []);
 
   // Meta + JSON-LD
-  const title =
-    "Mathem Solvex | NIMCET & CUET-PG PYQ Bank by Maarula Classes";
-  const description =
-    "Practice 10+ years of NIMCET & CUET-PG PYQs with expert-verified solutions and video explanations. The fastest way to prepare for MCA entrances.";
-
-  const siteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "Mathem Solvex by Maarula Classes",
-    url: `${SITE_URL}/`,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${SITE_URL}/questions?search={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
-  };
-
-  const orgSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Maarula Classes",
-    url: SITE_URL,
-    logo:
-      "https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png",
-  };
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What does Mathem Solvex offer?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "A large, organized bank of previous year questions (PYQs) with solutions for NIMCET, CUET-PG and more.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Are solutions included for PYQs?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Yes. Every question has a detailed explanation and many include video solutions.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I filter questions by exam and subject?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Absolutely. Filter by exam, year, subject, and topic to target your practice.",
-        },
-      },
-    ],
-  };
-
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Question Bank",
-        item: `${SITE_URL}/questions`,
-      },
-    ],
-  };
+  const title = "Mathem Solvex | NIMCET & CUET-PG PYQ Bank | Maarula Classes";
+  const description = "Access 10+ years of NIMCET, CUET-PG, and MCA entrance PYQs with expert video solutions. Improve your score with Mathem Solvex by Maarula Classes.";
 
   return (
     <div className={styles.homePage}>
@@ -106,33 +66,25 @@ export default function HomePage() {
         <html lang="en" />
         <title>{title}</title>
         <meta name="description" content={description} />
+        <meta name="keywords" content="NIMCET PYQ, CUET PG MCA, MCA Entrance Previous Year Questions, Maarula Classes, Mathem Solvex" />
         <meta name="robots" content="index,follow" />
         <link rel="canonical" href={`${SITE_URL}/`} />
-        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="//res.cloudinary.com" />
+        
+        {/* Open Graph */}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${SITE_URL}/`} />
-        <meta
-          property="og:image"
-          content="https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png"
-        />
+        <meta property="og:image" content="https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png" />
+        
+        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
-        <meta
-          name="twitter:image"
-          content="https://res.cloudinary.com/dwmj6up6j/image/upload/v1752687380/rqtljy0wi1uzq3itqxoe.png"
-        />
-        <script type="application/ld+json">{JSON.stringify(siteSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(orgSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       </Helmet>
 
-      {/* HERO (LCP-friendly). Your success banners show here. */}
-      <header className={styles.heroSection} aria-label="Success highlights">
+      {/* HERO SECTION */}
+      <header className={styles.heroSection}>
         <Suspense fallback={<div className={styles.skeletonHero} />}>
           <SuccessCarousel />
         </Suspense>
@@ -140,40 +92,17 @@ export default function HomePage() {
 
       {/* PRIMARY SEO INTRO */}
       <section className={styles.pyqIntro}>
-        <div className={styles.pyqContent}>
+        <RevealSection className={styles.pyqContent}>
           <h1 className={styles.h1}>
-            Mathem Solvex has everything you need for MCA preparation —
-            NIMCET &amp; CUET-PG Previous Year Questions with Solutions
+            Master MCA Entrances with <strong>Mathem Solvex</strong>
           </h1>
 
-          <p className={`${styles.lede} ${styles.body}`}>
-  <strong>Mathem Solvex by Maarula Classes</strong> is India’s most
-  focused PYQ (Previous Year Questions) bank for MCA entrances. Our
-  platform brings together <strong>10+ years of NIMCET PYQs</strong>, 
-  <strong>CUET-PG solved papers</strong>, and other MCA entrance
-  questions — all with detailed explanations and step-by-step solutions.
-</p>
+          <p className={styles.lede}>
+            The most comprehensive <strong>Previous Year Questions (PYQ)</strong> bank for 
+            NIMCET, CUET-PG, and major MCA entrances. Expert-verified solutions designed 
+            to help you ace your exams.
+          </p>
 
-          <h3 className={styles.h3}>Why PYQs work</h3>
-          <p className={`${styles.lede} ${styles.body}`}>
-  The smartest strategy is to <em>learn from the past</em>. Practising
-  topic-wise PYQs helps you spot trends, build familiarity with patterns,
-  and strengthen fundamentals. Every question on Mathem Solvex is tagged
-  by <strong>exam</strong>, <strong>year</strong>, <strong>subject</strong>
-  and <strong>topic</strong> so you can filter precisely what you need.
-</p>
-
-          <h3 className={styles.h3}>What you’ll get</h3>
-          <ul className={styles.bullets}>
-            <li>
-              Step-by-step solutions for every PYQ; video explanations for tricky
-              problems.
-            </li>
-            <li>Fast, clean question pages with high-quality math rendering.</li>
-            <li>Helpful internal links to related questions to keep flow.</li>
-          </ul>
-
-          {/* Primary CTAs */}
           <div className={styles.pyqButtons}>
             <Link to="/questions?exam=NIMCET" className={styles.primaryBtn}>
               Explore NIMCET PYQs
@@ -181,140 +110,101 @@ export default function HomePage() {
             <Link to="/questions?exam=CUET-PG" className={styles.secondaryBtn}>
               Explore CUET-PG PYQs
             </Link>
-            <Link to="/articles" className={styles.ghostBtn}>
-              Read Articles &amp; Tips
-            </Link>
           </div>
 
-          {/* Internal-link chips (consistent brand orange style) */}
           <div className={styles.chipRow}>
-            <Link
-              to="/questions?exam=NIMCET&year=2024"
-              className={styles.chip}
-            >
-              NIMCET PYQs 2024
-            </Link>
-            <Link
-              to="/questions?exam=CUET-PG&year=2024"
-              className={styles.chip}
-            >
-              CUET-PG PYQs 2024
-            </Link>
-            <Link
-              to="/questions?exam=NIMCET&subject=Mathematics"
-              className={styles.chip}
-            >
-              NIMCET · Mathematics
-            </Link>
-            <Link
-              to="/questions?exam=CUET-PG&subject=Reasoning"
-              className={styles.chip}
-            >
-              CUET-PG · Reasoning
-            </Link>
-            <Link to="/questions?year=2023" className={styles.chip}>
-              All PYQs from 2023
-            </Link>
-            <Link to="/articles" className={styles.chip}>
-              Exam Tips &amp; Articles
-            </Link>
+            <Link to="/questions?exam=NIMCET&year=2024" className={styles.chip}>NIMCET 2024</Link>
+            <Link to="/questions?exam=CUET-PG&year=2024" className={styles.chip}>CUET-PG 2024</Link>
+            <Link to="/questions?exam=NIMCET&subject=Mathematics" className={styles.chip}>Mathematics</Link>
+            <Link to="/questions?exam=CUET-PG&subject=Reasoning" className={styles.chip}>Reasoning</Link>
+            <Link to="/articles" className={styles.chip}>Practice Tips</Link>
           </div>
+        </RevealSection>
+      </section>
+
+      {/* FEATURES SECTION */}
+      <section className={styles.featuresSection}>
+        <RevealSection className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Why Choose Mathem Solvex?</h2>
+          <p className={styles.sectionSubtitle}>Designed for success, built for MCA aspirants.</p>
+        </RevealSection>
+        
+        <div className={styles.featuresGrid}>
+          <RevealSection className={styles.featureCard}>
+            <h3>Expert Solutions</h3>
+            <p>Step-by-step verified explanations and video solutions for every complex problem.</p>
+          </RevealSection>
+          <RevealSection className={styles.featureCard} style={{ transitionDelay: '0.1s' }}>
+            <h3>Topic-wise Filter</h3>
+            <p>Target your weak areas by filtering questions by subject, topic, year, and difficulty.</p>
+          </RevealSection>
+          <RevealSection className={styles.featureCard} style={{ transitionDelay: '0.2s' }}>
+            <h3>Real Exam Interface</h3>
+            <p>Practice in an environment that mimics the actual exam to build speed and confidence.</p>
+          </RevealSection>
         </div>
       </section>
 
-      {/* HALL OF FAME — improved carousel (pauses on hover/touch/focus) */}
-      <section className={styles.awardSection} aria-label="Hall of Fame">
-        <div className={styles.sectionHeader}>
+      {/* HALL OF FAME */}
+      <section className={styles.awardSection}>
+        <RevealSection className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Our Hall of Fame</h2>
-          <p className={styles.sectionSubtitle}>
-            Celebrating students who secured top ranks in premier MCA entrance
-            exams.
-          </p>
-        </div>
+          <p className={styles.sectionSubtitle}>Celebrating the excellence of our top-ranking students.</p>
+        </RevealSection>
+        
         <Suspense fallback={<div className={styles.skeleton} />}>
           <AwardCarousel />
         </Suspense>
-        <div className={styles.sectionCta}>
-          <Link to="/results" className={styles.ctaButtonPrimary}>
-            View Hall of Fame (2023–2025) →
+
+        <div className={styles.viewAllContainer}>
+          <Link to="/results" className={styles.viewAllButton}>
+            View Full Results (2023–2025) →
           </Link>
         </div>
       </section>
 
       {/* STUDENT CARDS */}
-      <section className={styles.resultsSection} aria-label="Top rankers">
-        <h2 className={styles.sectionTitle}>Meet Our 2025 Stars</h2>
-        <p className={styles.sectionSubtitle}>
-          A preview of our top rankers from the latest batch.
-        </p>
+      <section className={styles.resultsSection}>
+        <RevealSection className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Meet Our 2025 Stars</h2>
+          <p className={styles.sectionSubtitle}>Top rankers from the latest batch leading the way.</p>
+        </RevealSection>
+        
         <div className={styles.resultsGrid}>
-          {homepageStudents.map((s) => (
-            <StudentCard key={s.id} student={s} />
+          {homepageStudents.map((s, index) => (
+            <RevealSection key={s.id} style={{ transitionDelay: `${index * 0.05}s` }}>
+              <StudentCard student={s} />
+            </RevealSection>
           ))}
         </div>
-        <div className={styles.viewAllContainer}>
-          <Link to="/results" className={styles.viewAllButton}>
-            View Hall of Fame (2023–2025) →
-          </Link>
-        </div>
       </section>
 
-      {/* FEATURES */}
-      <section className={styles.featuresSection} aria-label="Why Maarula">
-        <h2 className={styles.sectionTitle}>Why Maarula Classes?</h2>
-        <div className={styles.featuresGrid}>
-          <div className={styles.featureCard}>
-            <h3>Expert Faculty</h3>
-            <p>Experienced, subject-specialist mentors for every core area.</p>
-          </div>
-          <div className={styles.featureCard}>
-            <h3>Strategic Organization</h3>
-            <p>
-              Questions organized by year, topic and difficulty to pace your
-              progress.
-            </p>
-          </div>
-          <div className={styles.featureCard}>
-            <h3>Real Exam Experience</h3>
-            <p>Practice in exam-style format to reduce surprises on test day.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ABOUT/IMAGE */}
-      <section className={styles.introSection} aria-label="About Maarula">
-        <div className={styles.introContent}>
+      {/* ABOUT MAARULA */}
+      <section className={styles.introSection}>
+        <RevealSection className={styles.introContent}>
           <h2 className={styles.mainTitle}>
-            India’s No. 1 NIMCET &amp; MCA Entrance Coaching Institute
+            India’s Premier NIMCET & MCA Entrance Coaching
           </h2>
           <p className={styles.introText}>
-            With over a decade of results, <strong>Maarula Classes</strong>{" "}
-            leads NIMCET and MCA entrance preparation through focused teaching
-            and practice.
+            For over a decade, <strong>Maarula Classes</strong> has been the standard-bearer 
+            for MCA entrance preparation. Our results speak for themselves.
           </p>
           <ul className={styles.introHighlights}>
-            <li>Expert faculty for subject-wise mentoring.</li>
-            <li>Comprehensive PYQ bank with detailed solutions.</li>
-            <li>A results-driven learning community.</li>
+            <li>Subject-wise expert faculty mentoring</li>
+            <li>In-depth conceptual clarity & shortcut tricks</li>
+            <li>The most rigorous mock test series</li>
           </ul>
-          <a
-            href="https://maarula.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.primaryBtn}
-          >
-            Visit Maarula Classes
+          <a href="https://maarula.in/" target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}>
+            Learn More About Maarula
           </a>
-        </div>
-        <div className={styles.introImageContainer}>
-          <img
-            src="https://maarula.in/wp-content/uploads/2024/06/2R1A0289-1024x683.jpg"
-            alt="Students at Maarula Classes during a session"
-            className={styles.introImage}
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
+        </RevealSection>
+
+        <RevealSection className={styles.introImageContainer}>
+          <div className={styles.dualImageGrid}>
+            <img src="/maarula_classroom1.jpg" alt="Maarula Classes Learning environment" className={styles.introImage} loading="lazy" />
+            <img src="/maarula_classromm2.jpg" alt="Academic success at Maarula" className={styles.introImage} loading="lazy" />
+          </div>
+        </RevealSection>
       </section>
     </div>
   );
