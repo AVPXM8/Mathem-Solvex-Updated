@@ -111,6 +111,13 @@ QuestionSchema.pre('save', async function (next) {
 // Add text index for searching
 QuestionSchema.index({ questionText: 'text', subject: 'text', topic: 'text', 'options.text': 'text' });
 
+// Add regular indexes for exact matches, filtering, and typical queries
+QuestionSchema.index({ exam: 1, subject: 1, topic: 1 });
+QuestionSchema.index({ subject: 1 });
+QuestionSchema.index({ topic: 1 });
+QuestionSchema.index({ year: -1 });
+QuestionSchema.index({ questionType: 1 });
+
 // Add pagination plugin
 QuestionSchema.plugin(mongoosePaginate);
 

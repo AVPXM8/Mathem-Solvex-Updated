@@ -45,16 +45,24 @@ app.use(
 );
 
 // CORS Configuration
+const parseOrigins = (str) => {
+    if (!str) return [];
+    return str.split(',').map(s => s.trim()).filter(Boolean);
+};
+
 const allowedOrigins =
     process.env.NODE_ENV === 'production'
-        ? [process.env.STUDENT_URL, process.env.ADMIN_URL].filter(Boolean)
+        ? [
+            ...parseOrigins(process.env.STUDENT_URL),
+            ...parseOrigins(process.env.ADMIN_URL)
+          ]
         : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'];
 
 const corsOptions = {
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(null, false);
+        return callback(new Error(`CORS error: Origin ${origin} is not allowed by policy.`));
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -88,6 +96,10 @@ app.get('/sitemap.xml', (req, res, next) => {
     res.set('Cache-Control', 'public, max-age=3600');
     next();
 }, generateSitemap);
+
+// JSON endpoint for Next.js sitemap builder
+const { getSitemapUrls } = require('./controllers/sitemapController');
+app.get('/api/sitemap-urls', getSitemapUrls);
 
 
 // --- 5) API ROUTES ---
@@ -134,6 +146,7 @@ const startServer = async () => {
         console.log('Initializing/Correcting questionNumber counter...');
         await initializeQuestionNumberCounter();
         console.log('QuestionNumber counter initialization/correction complete.');
+        console.log('Allowed Origins:', allowedOrigins);
         app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     } catch (err) {
         console.error('❌ Could not connect to MongoDB. Exiting...');

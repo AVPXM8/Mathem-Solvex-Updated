@@ -1,6 +1,24 @@
 const mongoose = require('mongoose');
+const NodeCache = require('node-cache');
 const Question = require('../models/Question.js'); // Ensure this path is correct
 const cloudinary = require('../config/cloudinary.js'); // Your specified path
+
+// ─── Application-level in-memory cache ───────────────────────────────────────
+// Significantly reduces MongoDB load for high-traffic public endpoints.
+const cache = new NodeCache({
+  stdTTL: 300,           // default: 5 minutes
+  checkperiod: 120,      // check for expired keys every 2 min
+  useClones: false,      // return references for speed (we never mutate cache values)
+});
+
+// Cache key builders
+const publicQuestionsKey = (q) => `pubQ:${JSON.stringify(q)}`;
+const publicByIdKey      = (id) => `pubById:${id}`;
+const relatedKey         = (id) => `related:${id}`;
+const FILTER_KEY         = 'filterOptions';
+
+// Invalidate all public caches on any write
+const bustCache = () => cache.flushAll();
 
 // Helper for cache headers
 const setCache = (res, seconds = 60, sMax = 300) => {
@@ -96,6 +114,13 @@ exports.getQuestions = async (req, res) => {
 };
 
 exports.getPublicQuestions = async (req, res) => {
+    // ── cache check ──────────────────────────────────────────────────────────
+    const cacheKey = publicQuestionsKey(req.query);
+    const hit = cache.get(cacheKey);
+    if (hit) {
+        setCache(res, 120, 600);
+        return res.status(200).json(hit);
+    }
     try {
         const page = parseInt(req.query.page || 1);
         const limit = parseInt(req.query.limit || 10); // This will now correctly be overridden by frontend
@@ -130,18 +155,22 @@ exports.getPublicQuestions = async (req, res) => {
         }
 
 
+        let selectString = '-__v -updatedAt -explanationText -explanationImageURL -videoURL -correctOption';
+        if (req.query.noOptions === 'true') {
+            selectString += ' -options';
+        }
+
         const options = {
             page: page,
             limit: limit,
             sort: sortOptions,
-            select: '-__v -updatedAt -explanationText -explanationImageURL -videoURL -correctOption',
+            select: selectString,
             lean: true,
         };
 
         const result = await Question.paginate(query, options);
 
-        setCache(res, 120, 600);
-        res.status(200).json({
+        const payload = {
             questions: result.docs,
             totalDocs: result.totalDocs,
             limit: result.limit,
@@ -151,7 +180,10 @@ exports.getPublicQuestions = async (req, res) => {
             hasPrevPage: result.hasPrevPage,
             nextPage: result.nextPage,
             prevPage: result.prevPage,
-        });
+        };
+        cache.set(cacheKey, payload, 300); // 5-min cache
+        setCache(res, 120, 600);
+        res.status(200).json(payload);
 
     } catch (error) {
         console.error('Error fetching public questions:', error);
@@ -173,6 +205,14 @@ exports.getPublicQuestionById = async (req, res) => {
       return res.status(400).json({ message: 'Invalid question ID' });
     }
 
+    // ── cache check ────────────────────────────────────────────────────────
+    const cacheKey = publicByIdKey(id);
+    const hit = cache.get(cacheKey);
+    if (hit) {
+      setCache(res, 120, 600);
+      return res.status(200).json(hit);
+    }
+
     // Public projection: keep what the student page needs; hide only internal meta
     const projection = '-__v'; // keep createdAt/updatedAt for SEO; expose options + isCorrect, explanation & video
 
@@ -183,6 +223,7 @@ exports.getPublicQuestionById = async (req, res) => {
 
     if (!Array.isArray(question.options)) question.options = [];
 
+    cache.set(cacheKey, question, 600); // 10-min cache
     setCache(res, 120, 600);
     return res.status(200).json(question);
   } catch (error) {
@@ -257,6 +298,7 @@ exports.createQuestion = async (req, res) => {
         });
 
         await newQuestion.save(); // This triggers the pre('save') hook for questionNumber generation
+        bustCache(); // invalidate public caches
         res.status(201).json(newQuestion);
 
     } catch (error) {
@@ -402,6 +444,7 @@ exports.updateQuestion = async (req, res) => {
         question.options = finalOptions; // Replace with the updated options array
 
         await question.save(); // This will not trigger pre('save') for questionNumber as `isNew` is false
+        bustCache(); // invalidate public caches
         res.status(200).json(question);
 
     } catch (error) {
@@ -438,6 +481,7 @@ exports.deleteQuestion = async (req, res) => {
         }
 
         await Question.findByIdAndDelete(id);
+        bustCache(); // invalidate public caches
         res.status(200).json({ message: 'Question deleted successfully.' });
 
     } catch (error) {
@@ -452,9 +496,11 @@ exports.deleteQuestion = async (req, res) => {
  */
 exports.getQuestionStats = async (req, res) => {
     try {
-        const totalQuestions = await Question.estimatedDocumentCount();
-        const subjects = await Question.distinct('subject', { subject: { $ne: null, $ne: '' } });
-        const exams = await Question.distinct('exam', { exam: { $ne: null, $ne: '' } });
+        const [totalQuestions, subjects, exams] = await Promise.all([
+            Question.estimatedDocumentCount(),
+            Question.distinct('subject', { subject: { $ne: null, $ne: '' } }),
+            Question.distinct('exam', { exam: { $ne: null, $ne: '' } })
+        ]);
         setCache(res, 300, 900);
         res.status(200).json({
             totalQuestions,
@@ -473,17 +519,29 @@ exports.getQuestionStats = async (req, res) => {
  */
 exports.getFilterOptions = async (req, res) => {
     try {
-        const subjects = await Question.distinct('subject', { subject: { $ne: null, $ne: '' } });
-        const topics = await Question.distinct('topic', { topic: { $ne: null, $ne: '' } }); // Added topics
-        const exams = await Question.distinct('exam', { exam: { $ne: null, $ne: '' } });
-        const years = await Question.distinct('year', { year: { $ne: null } });
-        setCache(res, 3600, 7200);
-        res.status(200).json({
+        // ── cache check ──────────────────────────────────────────────────────
+        const hit = cache.get(FILTER_KEY);
+        if (hit) {
+            setCache(res, 3600, 7200);
+            return res.status(200).json(hit);
+        }
+
+        const [subjects, topics, exams, years] = await Promise.all([
+            Question.distinct('subject', { subject: { $ne: null, $ne: '' } }),
+            Question.distinct('topic', { topic: { $ne: null, $ne: '' } }),
+            Question.distinct('exam', { exam: { $ne: null, $ne: '' } }),
+            Question.distinct('year', { year: { $ne: null } })
+        ]);
+
+        const payload = {
             subjects: subjects.sort(),
-            topics: topics.sort(), // Include topics
+            topics: topics.sort(),
             exams: exams.sort(),
             years: years.sort((a, b) => b - a)
-        });
+        };
+        cache.set(FILTER_KEY, payload, 3600); // 1-hour cache
+        setCache(res, 3600, 7200);
+        res.status(200).json(payload);
     } catch (error) {
         console.error('Error fetching filter options:', error);
         res.status(500).json({ message: 'Server Error' });
@@ -501,6 +559,14 @@ exports.getRelatedQuestions = async (req, res) => {
             return res.status(400).json({ message: 'Invalid question ID' });
         }
 
+        // ── cache check ──────────────────────────────────────────────────────
+        const cacheKey = relatedKey(id);
+        const hit = cache.get(cacheKey);
+        if (hit) {
+            setCache(res, 300, 900);
+            return res.status(200).json(hit);
+        }
+
         const original = await Question.findById(id, { topic: 1, exam: 1 }).lean();
         if (!original) return res.status(404).json({ message: 'Original question not found' });
 
@@ -511,6 +577,7 @@ exports.getRelatedQuestions = async (req, res) => {
             .limit(5)
             .lean();
 
+        cache.set(cacheKey, related, 600); // 10-min cache
         setCache(res, 300, 900);
         res.status(200).json(related);
     } catch (error) {
