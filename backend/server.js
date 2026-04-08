@@ -147,7 +147,10 @@ const startServer = async () => {
         await initializeQuestionNumberCounter();
         console.log('QuestionNumber counter initialization/correction complete.');
         console.log('Allowed Origins:', allowedOrigins);
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
+        });
     } catch (err) {
         console.error('❌ Could not connect to MongoDB. Exiting...');
         console.error(err);
